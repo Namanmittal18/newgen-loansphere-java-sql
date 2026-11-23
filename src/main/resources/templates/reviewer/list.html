@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: html(content=~{::div#reviewerListContent}, pageTitle='Reviewer Workspace')}">
+<body>
+<div id="reviewerListContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Reviewer Workspace</h3>
+            <p class="text-muted small mb-0">Underwriting queue for applications that passed automated eligibility (status: UNDER_REVIEW).</p>
+        </div>
+        <span class="badge bg-warning text-dark fs-6 px-3 py-2" th:text="${#lists.size(pendingApplications)} + ' Pending Cases'">0 Pending</span>
+    </div>
+
+    <!-- Reviewer Queue Table -->
+    <div class="card card-custom p-3">
+        <div class="table-responsive">
+            <table class="table table-custom table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Application No</th>
+                        <th>Customer</th>
+                        <th>Product</th>
+                        <th>Requested Amount</th>
+                        <th>Proposed EMI</th>
+                        <th>FOIR %</th>
+                        <th>Submitted At</th>
+                        <th class="text-end">Underwriting Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="app : ${pendingApplications}">
+                        <td class="fw-bold">
+                            <a th:href="@{'/reviewer/' + ${app.applicationId}}" th:text="${app.applicationNumber}" class="text-decoration-none">APP-0000</a>
+                        </td>
+                        <td class="fw-semibold" th:text="${app.customer != null ? app.customer.fullName : 'Customer #' + app.customerId}">Name</td>
+                        <td>
+                            <span class="badge bg-secondary" th:text="${app.productType}">PERSONAL</span>
+                        </td>
+                        <td class="fw-bold" th:text="${'₹' + #numbers.formatDecimal(app.requestedAmount, 1, 'COMMA', 2, 'POINT')}">₹1,00,000.00</td>
+                        <td th:text="${'₹' + #numbers.formatDecimal(app.proposedEmi, 1, 'COMMA', 2, 'POINT')}">₹8,884.88</td>
+                        <td>
+                            <span class="badge bg-success" th:text="${app.foirPercentage + '%'}">46.28%</span>
+                        </td>
+                        <td th:text="${app.submittedAt != null ? #temporals.format(app.submittedAt, 'dd-MMM-yyyy HH:mm') : '-'}">Timestamp</td>
+                        <td class="text-end">
+                            <a th:href="@{'/reviewer/' + ${app.applicationId}}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-pencil-square me-1"></i> Review & Decide
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(pendingApplications)}">
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-check-all fs-1 text-success d-block mb-2"></i>
+                            All applications have been reviewed! The review queue is clear.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

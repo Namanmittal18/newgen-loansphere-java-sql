@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: html(content=~{::div#disbListContent}, pageTitle='Simulated Disbursement')}">
+<body>
+<div id="disbListContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Simulated Loan Disbursement</h3>
+            <p class="text-muted small mb-0">Atomic loan disbursement execution with globally unique reference generation and ledger recording.</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-success fs-6 px-3 py-2">
+                Total Disbursed: <span th:text="${'₹' + #numbers.formatDecimal(totalDisbursedAmount, 1, 'COMMA', 2, 'POINT')}">₹0.00</span>
+            </span>
+        </div>
+    </div>
+
+    <!-- Disbursement Confirmation Banner (if just executed) -->
+    <div th:if="${disbursementResponse}" class="card border-success border-2 shadow-sm mb-4">
+        <div class="card-header bg-success text-white fw-bold d-flex align-items-center">
+            <i class="bi bi-check-circle-fill fs-5 me-2"></i> LOAN DISBURSEMENT CONFIRMATION
+        </div>
+        <div class="card-body bg-white">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <small class="text-muted d-block">Application Number</small>
+                    <strong class="fs-6" th:text="${disbursementResponse.applicationNumber}">APP-0000</strong>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted d-block">Customer Full Name</small>
+                    <strong class="fs-6" th:text="${disbursementResponse.customerName}">Customer Name</strong>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted d-block">Disbursed Amount</small>
+                    <strong class="fs-5 text-success"
+                            th:text="${'₹' + #numbers.formatDecimal(disbursementResponse.disbursedAmount, 1, 'COMMA', 2, 'POINT')}">₹1,00,000.00</strong>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted d-block">Disbursement Reference ID</small>
+                    <span class="badge bg-dark fs-6" th:text="${disbursementResponse.disbursementReference}">DISB-20261122-000101</span>
+                </div>
+            </div>
+            <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
+                <span class="small text-muted">
+                    <i class="bi bi-clock me-1"></i> Disbursed at: <strong th:text="${#temporals.format(disbursementResponse.disbursedDate, 'dd-MMM-yyyy HH:mm:ss')}">Timestamp</strong>
+                </span>
+                <span class="badge bg-info text-dark">
+                    <i class="bi bi-arrow-repeat me-1"></i> Ready for CoreDataPush sync to NG_CORE_BANKING
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ready for Disbursement Table -->
+    <div class="card card-custom p-4 mb-4">
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-hourglass-bottom me-2"></i>Applications Ready to Disburse</h5>
+        <div class="table-responsive">
+            <table class="table table-custom table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Application No</th>
+                        <th>Customer</th>
+                        <th>Product</th>
+                        <th>Approved Amount</th>
+                        <th>Tenure</th>
+                        <th>Reviewer Code</th>
+                        <th>Sanction Date</th>
+                        <th class="text-end">Disburse Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="app : ${readyApplications}">
+                        <td class="fw-bold">
+                            <a th:href="@{'/applications/' + ${app.applicationId}}" th:text="${app.applicationNumber}" class="text-decoration-none">APP-0000</a>
+                        </td>
+                        <td class="fw-semibold" th:text="${app.customer != null ? app.customer.fullName : 'Customer #' + app.customerId}">Name</td>
+                        <td>
+                            <span class="badge bg-secondary" th:text="${app.productType}">PERSONAL</span>
+                        </td>
+                        <td class="fw-bold text-success fs-6"
+                            th:text="${'₹' + #numbers.formatDecimal(app.approvedAmount != null ? app.approvedAmount : app.requestedAmount, 1, 'COMMA', 2, 'POINT')}">₹1,00,000.00</td>
+                        <td th:text="${app.tenureMonths + ' Mos'}">12 Mos</td>
+                        <td th:text="${app.reviewerCode}">REV-101</td>
+                        <td th:text="${app.approvedAt != null ? #temporals.format(app.approvedAt, 'dd-MMM-yyyy HH:mm') : '-'}">Timestamp</td>
+                        <td class="text-end">
+                            <form th:action="@{'/disbursement/' + ${app.applicationId} + '/execute'}" method="post" class="d-inline"
+                                  onsubmit="return confirm('Confirm simulated disbursement of full approved loan amount?');">
+                                <input type="hidden" name="performedBy" value="OPS_DISBURSEMENT_OFFICER">
+                                <button type="submit" class="btn btn-sm btn-success fw-bold">
+                                    <i class="bi bi-cash me-1"></i> Execute Disbursement
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(readyApplications)}">
+                        <td colspan="8" class="text-center py-4 text-muted">No applications currently in CREDIT_APPROVAL status ready to disburse.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Completed Disbursements Ledger -->
+    <div class="card card-custom p-4">
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-journal-check me-2"></i>Completed Disbursements Ledger</h5>
+        <div class="table-responsive">
+            <table class="table table-custom table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Disbursement ID</th>
+                        <th>Reference Number</th>
+                        <th>Application ID</th>
+                        <th>Disbursed Amount</th>
+                        <th>Disbursement Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="d : ${disbursements}">
+                        <td th:text="${d.disbursementId}">1</td>
+                        <td class="fw-bold">
+                            <span class="badge bg-dark" th:text="${d.disbursementReference}">DISB-20261122-000101</span>
+                        </td>
+                        <td>
+                            <a th:href="@{'/applications/' + ${d.applicationId}}" th:text="'Application #' + ${d.applicationId}">App</a>
+                        </td>
+                        <td class="fw-bold text-success"
+                            th:text="${'₹' + #numbers.formatDecimal(d.amount, 1, 'COMMA', 2, 'POINT')}">₹1,00,000.00</td>
+                        <td th:text="${d.disbursedAt != null ? #temporals.format(d.disbursedAt, 'dd-MMM-yyyy HH:mm:ss') : '-'}">Timestamp</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(disbursements)}">
+                        <td colspan="5" class="text-center py-4 text-muted">No disbursements completed yet.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

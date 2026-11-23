@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: html(content=~{::div#appViewContent}, pageTitle=${application.applicationNumber})}">
+<body>
+<div id="appViewContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <h3 class="fw-bold mb-0" th:text="${application.applicationNumber}">APP-20261122-0001</h3>
+                <span th:class="'badge fs-6 badge-status-' + ${application.status}" th:text="${application.status}">DRAFT</span>
+                <span th:if="${application.eligible}" class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Eligible</span>
+                <span th:if="${application.eligible != null && !application.eligible && application.status == T(com.newgen.loanorigination.model.enums.ApplicationStatus).REJECTED}" class="badge bg-danger">Ineligible</span>
+            </div>
+            <p class="text-muted small mt-1 mb-0">Origination Branch: <span th:text="${application.branchName + ' (' + application.branchCode + ')'}">Branch</span></p>
+        </div>
+        <div class="d-flex gap-2">
+            <!-- Submit Button (DRAFT only) -->
+            <form th:if="${application.status == T(com.newgen.loanorigination.model.enums.ApplicationStatus).DRAFT}"
+                  th:action="@{'/applications/' + ${application.applicationId} + '/submit'}" method="post">
+                <button type="submit" class="btn btn-success fw-bold">
+                    <i class="bi bi-send-check me-1"></i> Submit for Eligibility Assessment
+                </button>
+            </form>
+
+            <!-- Review Button (UNDER_REVIEW only) -->
+            <a th:if="${application.status == T(com.newgen.loanorigination.model.enums.ApplicationStatus).UNDER_REVIEW}"
+               th:href="@{'/reviewer/' + ${application.applicationId}}" class="btn btn-warning text-dark fw-bold">
+                <i class="bi bi-clipboard-check me-1"></i> Review Application
+            </a>
+
+            <!-- Download PDF Button (CREDIT_APPROVAL / DISBURSED / EXIT) -->
+            <a th:if="${application.status == T(com.newgen.loanorigination.model.enums.ApplicationStatus).CREDIT_APPROVAL or application.status == T(com.newgen.loanorigination.model.enums.ApplicationStatus).DISBURSED or application.status == T(com.newgen.loanorigination.model.enums.ApplicationStatus).EXIT}"
+               th:href="@{'/credit/' + ${application.applicationId} + '/pdf'}" class="btn btn-outline-danger">
+                <i class="bi bi-file-earmark-pdf me-1"></i> Download Application Form PDF
+            </a>
+
+            <a th:href="@{/applications}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- Application Details Grid -->
+    <div class="row g-4 mb-4">
+        <!-- Applicant Card -->
+        <div class="col-lg-4">
+            <div class="card card-custom p-3 h-100">
+                <h5 class="fw-bold text-primary mb-3"><i class="bi bi-person me-2"></i>Applicant Details</h5>
+                <div th:if="${application.customer != null}">
+                    <table class="table table-sm table-borderless mb-0">
+                        <tr>
+                            <th class="text-muted w-40">Full Name:</th>
+                            <td class="fw-bold">
+                                <a th:href="@{'/customers/' + ${application.customer.customerId}}" th:text="${application.customer.fullName}">Name</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Customer Code:</th>
+                            <td th:text="${application.customer.customerCode}">CUST-000</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Date of Birth:</th>
+                            <td th:text="${#temporals.format(application.customer.dateOfBirth, 'dd-MMM-yyyy')}">DOB</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Mobile Number:</th>
+                            <td th:text="${application.customer.mobileNumber}">9876543210</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">KYC Ref:</th>
+                            <td th:text="${application.customer.kycType + ': ' + application.customer.kycReference}">KYC</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">City / State:</th>
+                            <td th:text="${application.customer.city + ', ' + application.customer.state}">Location</td>
+                        </tr>
+                    </table>
+                </div>
+                <div th:if="${application.customer == null}" class="text-muted">Customer details not available.</div>
+            </div>
+        </div>
+
+        <!-- Loan Terms Card -->
+        <div class="col-lg-4">
+            <div class="card card-custom p-3 h-100">
+                <h5 class="fw-bold text-primary mb-3"><i class="bi bi-cash-stack me-2"></i>Loan Parameters</h5>
+                <table class="table table-sm table-borderless mb-0">
+                    <tr>
+                        <th class="text-muted w-40">Product Type:</th>
+                        <td><span class="badge bg-secondary" th:text="${application.productType}">PERSONAL</span></td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Requested Amount:</th>
+                        <td class="fw-bold text-primary fs-6"
+                            th:text="${'₹' + #numbers.formatDecimal(application.requestedAmount, 1, 'COMMA', 2, 'POINT')}">₹1,00,000.00</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Tenure:</th>
+                        <td th:text="${application.tenureMonths + ' Months'}">12 Months</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Interest Rate:</th>
+                        <td th:text="${application.annualInterestRate + '% p.a.'}">12.00%</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Approved Amount:</th>
+                        <td class="fw-bold text-success"
+                            th:text="${application.approvedAmount != null ? '₹' + #numbers.formatDecimal(application.approvedAmount, 1, 'COMMA', 2, 'POINT') : '-'}">-</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Created Timestamp:</th>
+                        <td th:text="${application.createdAt != null ? #temporals.format(application.createdAt, 'dd-MMM-yyyy HH:mm') : '-'}">Date</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Financial Evaluation Card -->
+        <div class="col-lg-4">
+            <div class="card card-custom p-3 h-100">
+                <h5 class="fw-bold text-primary mb-3"><i class="bi bi-calculator me-2"></i>Affordability & EMI</h5>
+                <table class="table table-sm table-borderless mb-0">
+                    <tr>
+                        <th class="text-muted w-40">Net Income:</th>
+                        <td th:text="${'₹' + #numbers.formatDecimal(application.monthlyNetIncome, 1, 'COMMA', 2, 'POINT')}">₹30,000.00</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Existing Obligations:</th>
+                        <td th:text="${'₹' + #numbers.formatDecimal(application.existingMonthlyObligations, 1, 'COMMA', 2, 'POINT')}">₹5,000.00</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Proposed EMI:</th>
+                        <td class="fw-bold text-primary fs-6"
+                            th:text="${'₹' + #numbers.formatDecimal(application.proposedEmi, 1, 'COMMA', 2, 'POINT')}">₹8,884.88</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Calculated FOIR:</th>
+                        <td>
+                            <strong th:class="${application.foirPercentage != null && application.foirPercentage.doubleValue() <= 50.0 ? 'text-success' : 'text-danger'}"
+                                    th:text="${application.foirPercentage != null ? application.foirPercentage + '% (Max 50%)' : '-'}">46.28%</strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Reviewer Code:</th>
+                        <td th:text="${application.reviewerCode != null ? application.reviewerCode : '-'}">-</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Decision Reason:</th>
+                        <td th:text="${application.decisionReason != null ? application.decisionReason : '-'}">-</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Eligibility Reasons / System Warnings -->
+    <div th:if="${application.eligibilityReasons != null}" class="card card-custom p-3 mb-4 bg-light border-warning">
+        <h6 class="fw-bold text-dark mb-1"><i class="bi bi-info-circle-fill text-warning me-2"></i>Assessment Log / Remarks:</h6>
+        <div class="small text-muted" th:text="${application.eligibilityReasons}">Eligibility notes...</div>
+    </div>
+
+    <!-- Application Audit History Timeline -->
+    <div class="card card-custom p-4">
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-clock-history me-2"></i>Audit History Timeline</h5>
+        <div class="timeline mt-2">
+            <div th:each="h : ${historyList}" class="timeline-item">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-bold" th:text="${h.action}">ACTION</span>
+                    <small class="text-muted" th:text="${h.performedAt != null ? #temporals.format(h.performedAt, 'dd-MMM-yyyy HH:mm:ss') : '-'}">Timestamp</small>
+                </div>
+                <div class="small text-secondary mb-1">
+                    Transition: <span class="badge bg-secondary" th:text="${h.oldStatus != null ? h.oldStatus : 'INIT'}">OLD</span>
+                    <i class="bi bi-arrow-right mx-1"></i>
+                    <span class="badge bg-primary" th:text="${h.newStatus}">NEW</span>
+                    | Performed by: <strong th:text="${h.performedBy}">USER</strong>
+                </div>
+                <div class="text-muted small" th:text="${h.remarks}">Remarks</div>
+            </div>
+            <div th:if="${#lists.isEmpty(historyList)}" class="text-muted small">No audit history recorded.</div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: html(content=~{::div#reportsContent}, pageTitle='SQL Reports')}">
+<body>
+<div id="reportsContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Standard SQL Management Reports</h3>
+            <p class="text-muted small mb-0">Direct SQL aggregation, joins, GROUP BY, and HAVING reporting engine based on database/reports.sql.</p>
+        </div>
+    </div>
+
+    <!-- Report Tabs -->
+    <ul class="nav nav-tabs nav-fill mb-4">
+        <li class="nav-item">
+            <a th:class="'nav-link fw-semibold ' + (${activeTab == 'register' or activeTab == null} ? 'active text-primary' : 'text-secondary')"
+               th:href="@{/reports?tab=register}">
+                <i class="bi bi-card-checklist me-1"></i> 1. Application Register
+            </a>
+        </li>
+        <li class="nav-item">
+            <a th:class="'nav-link fw-semibold ' + (${activeTab == 'pipeline'} ? 'active text-primary' : 'text-secondary')"
+               th:href="@{/reports?tab=pipeline}">
+                <i class="bi bi-funnel me-1"></i> 2. Product Pipeline
+            </a>
+        </li>
+        <li class="nav-item">
+            <a th:class="'nav-link fw-semibold ' + (${activeTab == 'disbursement'} ? 'active text-primary' : 'text-secondary')"
+               th:href="@{/reports?tab=disbursement}">
+                <i class="bi bi-calendar3 me-1"></i> 3. Disbursements
+            </a>
+        </li>
+        <li class="nav-item">
+            <a th:class="'nav-link fw-semibold ' + (${activeTab == 'overdue'} ? 'active text-primary' : 'text-secondary')"
+               th:href="@{/reports?tab=overdue}">
+                <i class="bi bi-alarm me-1"></i> 4. Overdue Reviews
+            </a>
+        </li>
+        <li class="nav-item">
+            <a th:class="'nav-link fw-semibold ' + (${activeTab == 'nodisb'} ? 'active text-primary' : 'text-secondary')"
+               th:href="@{/reports?tab=nodisb}">
+                <i class="bi bi-person-x me-1"></i> 5. Zero Disbursement
+            </a>
+        </li>
+        <li class="nav-item">
+            <a th:class="'nav-link fw-semibold ' + (${activeTab == 'repeat'} ? 'active text-primary' : 'text-secondary')"
+               th:href="@{/reports?tab=repeat}">
+                <i class="bi bi-people-fill me-1"></i> 6. Repeat Applicants
+            </a>
+        </li>
+    </ul>
+
+    <!-- Tab 1: Application Register -->
+    <div th:if="${activeTab == 'register' or activeTab == null}" class="card card-custom p-4">
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-card-checklist me-2"></i>Report 1: Application Register</h5>
+        <form th:action="@{/reports}" method="get" class="row g-2 mb-4 bg-light p-3 rounded">
+            <input type="hidden" name="tab" value="register">
+            <div class="col-md-4">
+                <label class="form-label small text-muted mb-1">Filter by Product</label>
+                <select name="productType" class="form-select form-select-sm">
+                    <option value="ALL">All Products</option>
+                    <option value="PERSONAL" th:selected="${selectedProduct == 'PERSONAL'}">Personal Loan</option>
+                    <option value="EDUCATION" th:selected="${selectedProduct == 'EDUCATION'}">Education Loan</option>
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label small text-muted mb-1">Filter by Status</label>
+                <select name="status" class="form-select form-select-sm">
+                    <option value="ALL">All Stages</option>
+                    <option value="DRAFT" th:selected="${selectedStatus == 'DRAFT'}">DRAFT</option>
+                    <option value="UNDER_REVIEW" th:selected="${selectedStatus == 'UNDER_REVIEW'}">UNDER_REVIEW</option>
+                    <option value="CREDIT_APPROVAL" th:selected="${selectedStatus == 'CREDIT_APPROVAL'}">CREDIT_APPROVAL</option>
+                    <option value="DISBURSED" th:selected="${selectedStatus == 'DISBURSED'}">DISBURSED</option>
+                    <option value="CORE_BANKING_PUSH" th:selected="${selectedStatus == 'CORE_BANKING_PUSH'}">CORE_BANKING_PUSH</option>
+                    <option value="EXIT" th:selected="${selectedStatus == 'EXIT'}">EXIT</option>
+                    <option value="REJECTED" th:selected="${selectedStatus == 'REJECTED'}">REJECTED</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-sm btn-primary flex-grow-1 me-2">Filter</button>
+                <a th:href="@{/reports?tab=register}" class="btn btn-sm btn-outline-secondary">Reset</a>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-custom table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Application No</th>
+                        <th>Customer</th>
+                        <th>Product</th>
+                        <th>Requested Amount</th>
+                        <th>Proposed EMI</th>
+                        <th>Status</th>
+                        <th>Submission Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="r : ${registerReport}">
+                        <td class="fw-bold" th:text="${r.applicationNumber}">APP-000</td>
+                        <td th:text="${r.customerName}">Name</td>
+                        <td><span class="badge bg-secondary" th:text="${r.productType}">PERSONAL</span></td>
+                        <td class="fw-bold" th:text="${'₹' + #numbers.formatDecimal(r.requestedAmount, 1, 'COMMA', 2, 'POINT')}">₹1,00,000.00</td>
+                        <td th:text="${'₹' + #numbers.formatDecimal(r.proposedEmi, 1, 'COMMA', 2, 'POINT')}">₹8,884.88</td>
+                        <td><span th:class="'badge badge-status-' + ${r.status}" th:text="${r.status}">DRAFT</span></td>
+                        <td th:text="${r.submittedAt != null ? #temporals.format(r.submittedAt, 'dd-MMM-yyyy HH:mm') : '-'}">Date</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(registerReport)}">
+                        <td colspan="7" class="text-center py-4 text-muted">No records match the filter criteria.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tab 2: Product Pipeline -->
+    <div th:if="${activeTab == 'pipeline'}" class="row g-4">
+        <div class="col-lg-6">
+            <div class="card card-custom p-4 h-100">
+                <h5 class="fw-bold text-primary mb-3"><i class="bi bi-pie-chart-fill me-2"></i>2A. Pipeline by Product & Status</h5>
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Status</th>
+                                <th>Count</th>
+                                <th>Total Requested Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p : ${pipelineByStatus}">
+                                <td class="fw-bold" th:text="${p.productType}">PERSONAL</td>
+                                <td><span th:class="'badge badge-status-' + ${p.status}" th:text="${p.status}">STATUS</span></td>
+                                <td th:text="${p.applicationCount}">0</td>
+                                <td class="fw-bold text-primary" th:text="${'₹' + #numbers.formatDecimal(p.totalRequestedAmount, 1, 'COMMA', 2, 'POINT')}">₹0.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card card-custom p-4 h-100">
+                <h5 class="fw-bold text-primary mb-3"><i class="bi bi-buildings-fill me-2"></i>2B. Pipeline by Branch & Product</h5>
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Branch</th>
+                                <th>Branch Name</th>
+                                <th>Product</th>
+                                <th>Count</th>
+                                <th>Total Requested</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="b : ${pipelineByBranch}">
+                                <td class="fw-bold" th:text="${b.branchCode}">BR001</td>
+                                <td th:text="${b.branchName}">Name</td>
+                                <td><span class="badge bg-secondary" th:text="${b.productType}">PERSONAL</span></td>
+                                <td th:text="${b.applicationCount}">0</td>
+                                <td class="fw-bold text-primary" th:text="${'₹' + #numbers.formatDecimal(b.totalRequestedAmount, 1, 'COMMA', 2, 'POINT')}">₹0.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 3: Disbursements Summary -->
+    <div th:if="${activeTab == 'disbursement'}" class="card card-custom p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-primary mb-0"><i class="bi bi-cash-coin me-2"></i>Report 3: Daily / Monthly / Quarterly Disbursements</h5>
+            <div class="btn-group btn-group-sm">
+                <a th:href="@{/reports?tab=disbursement&periodType=DAILY}"
+                   th:class="'btn ' + (${selectedPeriodType == 'DAILY' or selectedPeriodType == null} ? 'btn-primary' : 'btn-outline-primary')">Daily</a>
+                <a th:href="@{/reports?tab=disbursement&periodType=MONTHLY}"
+                   th:class="'btn ' + (${selectedPeriodType == 'MONTHLY'} ? 'btn-primary' : 'btn-outline-primary')">Monthly</a>
+                <a th:href="@{/reports?tab=disbursement&periodType=QUARTERLY}"
+                   th:class="'btn ' + (${selectedPeriodType == 'QUARTERLY'} ? 'btn-primary' : 'btn-outline-primary')">Quarterly</a>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-custom table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Period</th>
+                        <th>Branch Code</th>
+                        <th>Branch Name</th>
+                        <th>Disbursement Count</th>
+                        <th>Total Disbursed Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="d : ${disbursementSummary}">
+                        <td class="fw-bold" th:text="${d.disbursementPeriod}">2026-11-22</td>
+                        <td th:text="${d.branchCode}">BR001</td>
+                        <td th:text="${d.branchName}">Name</td>
+                        <td th:text="${d.disbursementCount}">1</td>
+                        <td class="fw-bold text-success fs-6"
+                            th:text="${'₹' + #numbers.formatDecimal(d.totalDisbursedAmount, 1, 'COMMA', 2, 'POINT')}">₹1,00,000.00</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(disbursementSummary)}">
+                        <td colspan="5" class="text-center py-4 text-muted">No disbursements recorded for this period.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tab 4: Overdue Reviews -->
+    <div th:if="${activeTab == 'overdue'}" class="card card-custom p-4">
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-alarm-fill me-2 text-danger"></i>Report 4: Overdue Reviews (> 2 Calendar Days in UNDER_REVIEW)</h5>
+        <div class="alert alert-light border small mb-3">
+            <i class="bi bi-info-circle me-1"></i>
+            Applications awaiting reviewer decision where more than 2 calendar days have elapsed since submission. Applications exactly 2 days old are not overdue; 3 days or more are flagged as overdue.
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-custom table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Application No</th>
+                        <th>Customer Name</th>
+                        <th>Mobile</th>
+                        <th>Product</th>
+                        <th>Requested Amount</th>
+                        <th>Submitted Date</th>
+                        <th>Days Waiting</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="o : ${overdueReviews}">
+                        <td class="fw-bold text-danger">
+                            <a th:href="@{'/applications/' + ${o.applicationId}}" th:text="${o.applicationNumber}" class="text-decoration-none">APP-000</a>
+                        </td>
+                        <td th:text="${o.customerName}">Name</td>
+                        <td th:text="${o.mobileNumber}">Mobile</td>
+                        <td><span class="badge bg-secondary" th:text="${o.productType}">PERSONAL</span></td>
+                        <td class="fw-bold" th:text="${'₹' + #numbers.formatDecimal(o.requestedAmount, 1, 'COMMA', 2, 'POINT')}">₹1,00,000.00</td>
+                        <td th:text="${o.submittedAt != null ? #temporals.format(o.submittedAt, 'dd-MMM-yyyy HH:mm') : '-'}">Date</td>
+                        <td>
+                            <span class="badge bg-danger fs-6" th:text="${o.daysWaiting + ' Days'}">3 Days</span>
+                        </td>
+                        <td class="text-end">
+                            <a th:href="@{'/reviewer/' + ${o.applicationId}}" class="btn btn-sm btn-warning text-dark fw-bold">
+                                Expedite Review
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(overdueReviews)}">
+                        <td colspan="8" class="text-center py-4 text-success fw-bold">
+                            <i class="bi bi-check-circle me-1"></i> Great news! No overdue reviews pending beyond 2 calendar days.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tab 5: Customers Without Disbursement -->
+    <div th:if="${activeTab == 'nodisb'}" class="card card-custom p-4">
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-person-x-fill me-2"></i>Report 5: Customers with Applications but Zero Disbursements</h5>
+        <div class="alert alert-light border small mb-3">
+            <i class="bi bi-info-circle me-1"></i>
+            Returns each customer once who has placed at least one loan application, but has never received any loan disbursement across any of their applications.
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-custom table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Customer Code</th>
+                        <th>Full Name</th>
+                        <th>Mobile</th>
+                        <th>City</th>
+                        <th>State</th>
+                        <th>Customer Since</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="c : ${customersWithoutDisbursement}">
+                        <td class="fw-bold" th:text="${c.customerCode}">CUST-000</td>
+                        <td class="fw-semibold" th:text="${c.customerName}">Name</td>
+                        <td th:text="${c.mobileNumber}">Mobile</td>
+                        <td th:text="${c.city}">City</td>
+                        <td th:text="${c.state}">State</td>
+                        <td th:text="${c.customerSince != null ? #temporals.format(c.customerSince, 'dd-MMM-yyyy') : '-'}">Date</td>
+                        <td class="text-end">
+                            <a th:href="@{'/customers/' + ${c.customerId}}" class="btn btn-sm btn-outline-primary">View Customer</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(customersWithoutDisbursement)}">
+                        <td colspan="7" class="text-center py-4 text-muted">All customers with applications have received at least one disbursement.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tab 6: Repeat Applicants -->
+    <div th:if="${activeTab == 'repeat'}" class="card card-custom p-4">
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-people-fill me-2"></i>Report 6: Repeat Applicants (GROUP BY + HAVING Count > 1)</h5>
+        <div class="alert alert-light border small mb-3">
+            <i class="bi bi-info-circle me-1"></i>
+            Identifies customers who have applied for more than one loan across products. Computed using SQL <code>GROUP BY customer_id HAVING COUNT(application_id) > 1</code>.
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-custom table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Customer Code</th>
+                        <th>Customer Name</th>
+                        <th>Mobile Number</th>
+                        <th>Total Applications</th>
+                        <th>Total Requested Amount</th>
+                        <th>First Application</th>
+                        <th>Latest Application</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="rep : ${repeatApplicants}">
+                        <td class="fw-bold" th:text="${rep.customerCode}">CUST-000</td>
+                        <td class="fw-semibold" th:text="${rep.customerName}">Name</td>
+                        <td th:text="${rep.mobileNumber}">Mobile</td>
+                        <td>
+                            <span class="badge bg-primary fs-6" th:text="${rep.totalApplications} + ' Apps'">2 Apps</span>
+                        </td>
+                        <td class="fw-bold text-success fs-6"
+                            th:text="${'₹' + #numbers.formatDecimal(rep.totalRequestedAmount, 1, 'COMMA', 2, 'POINT')}">₹8,00,000.00</td>
+                        <td th:text="${rep.firstApplicationDate != null ? #temporals.format(rep.firstApplicationDate, 'dd-MMM-yyyy') : '-'}">Date</td>
+                        <td th:text="${rep.latestApplicationDate != null ? #temporals.format(rep.latestApplicationDate, 'dd-MMM-yyyy') : '-'}">Date</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(repeatApplicants)}">
+                        <td colspan="7" class="text-center py-4 text-muted">No repeat applicants found.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

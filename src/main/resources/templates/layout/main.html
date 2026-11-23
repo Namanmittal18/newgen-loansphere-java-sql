@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} != null ? ${pageTitle} + ' | LoanSphere' : 'LoanSphere | Loan Origination System'">LoanSphere | Loan Origination System</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --ls-primary: #0f2043;
+            --ls-secondary: #1a365d;
+            --ls-accent: #e8590c;
+            --ls-light-bg: #f8fafc;
+            --ls-card-border: #e2e8f0;
+        }
+        body {
+            background-color: var(--ls-light-bg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #1e293b;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .navbar-custom {
+            background-color: var(--ls-primary);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #ffffff !important;
+        }
+        .navbar-brand span {
+            color: var(--ls-accent);
+        }
+        .nav-link {
+            color: #cbd5e1 !important;
+            font-size: 0.92rem;
+            font-weight: 500;
+            padding: 0.5rem 0.85rem !important;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .badge-status-DRAFT { background-color: #64748b; color: #fff; }
+        .badge-status-UNDER_REVIEW { background-color: #0284c7; color: #fff; }
+        .badge-status-CREDIT_APPROVAL { background-color: #f59e0b; color: #000; }
+        .badge-status-DISBURSED { background-color: #10b981; color: #fff; }
+        .badge-status-CORE_BANKING_PUSH { background-color: #8b5cf6; color: #fff; }
+        .badge-status-EXIT { background-color: #047857; color: #fff; }
+        .badge-status-REJECTED { background-color: #ef4444; color: #fff; }
+
+        .metric-card {
+            background: #ffffff;
+            border: 1px solid var(--ls-card-border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06);
+        }
+        .metric-label {
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: #64748b;
+            letter-spacing: 0.5px;
+        }
+        .metric-value {
+            font-size: 1.65rem;
+            font-weight: 700;
+            color: var(--ls-primary);
+            margin-top: 0.25rem;
+        }
+        .card-custom {
+            background: #ffffff;
+            border: 1px solid var(--ls-card-border);
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+        .table-custom th {
+            background-color: #f1f5f9;
+            color: #334155;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            border-top: none;
+        }
+        .table-custom td {
+            font-size: 0.9rem;
+            vertical-align: middle;
+        }
+        .footer-custom {
+            background-color: #ffffff;
+            border-top: 1px solid var(--ls-card-border);
+            margin-top: auto;
+            padding: 1rem 0;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+        .timeline {
+            position: relative;
+            padding-left: 20px;
+            list-style: none;
+        }
+        .timeline:before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e2e8f0;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .timeline-item:before {
+            content: '';
+            position: absolute;
+            left: -17px;
+            top: 4px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--ls-primary);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center" th:href="@{/dashboard}">
+                <i class="bi bi-shield-check fs-4 me-2 text-warning"></i>
+                <span>Loan</span>Sphere
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/dashboard}"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/customers}"><i class="bi bi-people me-1"></i> Customers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/applications}"><i class="bi bi-file-earmark-text me-1"></i> Applications</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/reviewer}"><i class="bi bi-clipboard-check me-1"></i> Reviewer Workspace</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/credit}"><i class="bi bi-patch-check me-1"></i> Credit Approval</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/disbursement}"><i class="bi bi-cash-stack me-1"></i> Disbursement</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/reports}"><i class="bi bi-graph-up-arrow me-1"></i> SQL Reports</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/utilities}"><i class="bi bi-gear-wide-connected me-1"></i> Utilities</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center text-light small">
+                    <span class="badge bg-light text-dark me-2">
+                        <i class="bi bi-database me-1"></i> MySQL 8.x Active
+                    </span>
+                    <a th:href="@{/applications/new}" class="btn btn-sm btn-warning text-dark fw-bold">
+                        <i class="bi bi-plus-circle me-1"></i> New Application
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container Content -->
+    <main class="container-fluid px-4 py-4">
+        <!-- Flash Alerts -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span th:text="${successMessage}">Operation completed successfully.</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${warningMessage}" class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span th:text="${warningMessage}">Notice or warning.</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-x-circle-fill me-2"></i>
+            <span th:text="${errorMessage}">An error occurred.</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Dynamic Body Content -->
+        <div th:replace="${content}"></div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer-custom">
+        <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
+            <div>
+                <strong>LoanSphere</strong> — Educational Loan Origination System | Newgen Pre-Onboarding Assignment
+            </div>
+            <div>
+                <span>Tech Stack: Java 17+ | Spring JDBC (No Hibernate) | MySQL 8.x | OpenPDF | Bootstrap 5</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

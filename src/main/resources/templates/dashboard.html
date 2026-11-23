@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: html(content=~{::div#dashboardContent}, pageTitle='Executive Dashboard')}">
+<body>
+<div id="dashboardContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Executive Lending Dashboard</h3>
+            <p class="text-muted small mb-0">Real-time loan origination pipeline, portfolio metrics, and active review queues.</p>
+        </div>
+        <div>
+            <a th:href="@{/applications/new}" class="btn btn-primary me-2">
+                <i class="bi bi-file-earmark-plus me-1"></i> New Loan Application
+            </a>
+            <a th:href="@{/customers/new}" class="btn btn-outline-secondary">
+                <i class="bi bi-person-plus me-1"></i> Register Customer
+            </a>
+        </div>
+    </div>
+
+    <!-- Metric Cards Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="metric-card border-start border-4 border-primary">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="metric-label">Total Customers</div>
+                        <div class="metric-value" th:text="${totalCustomers}">0</div>
+                    </div>
+                    <div class="fs-1 text-primary opacity-50"><i class="bi bi-people"></i></div>
+                </div>
+                <div class="small text-muted mt-2">Active applicant profiles</div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="metric-card border-start border-4 border-info">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="metric-label">Total Applications</div>
+                        <div class="metric-value" th:text="${totalApplications}">0</div>
+                    </div>
+                    <div class="fs-1 text-info opacity-50"><i class="bi bi-folder2-open"></i></div>
+                </div>
+                <div class="small text-muted mt-2">All product pipelines</div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="metric-card border-start border-4 border-warning">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="metric-label">Awaiting Review</div>
+                        <div class="metric-value text-warning" th:text="${underReviewCount}">0</div>
+                    </div>
+                    <div class="fs-1 text-warning opacity-50"><i class="bi bi-hourglass-split"></i></div>
+                </div>
+                <div class="small text-muted mt-2">
+                    <span class="text-danger fw-bold" th:text="${overdueCount} + ' Overdue (>2 days)'">0 Overdue</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="metric-card border-start border-4 border-success">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="metric-label">Total Disbursed</div>
+                        <div class="metric-value text-success"
+                             th:text="${'₹' + #numbers.formatDecimal(totalDisbursedAmount, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+                    </div>
+                    <div class="fs-1 text-success opacity-50"><i class="bi bi-cash-coin"></i></div>
+                </div>
+                <div class="small text-muted mt-2">
+                    <span th:text="${disbursedCount} + ' loans successfully disbursed'">0 loans</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts and Status Summary Row -->
+    <div class="row g-4 mb-4">
+        <!-- Status Breakdown Chart -->
+        <div class="col-lg-5">
+            <div class="card card-custom h-100 p-3">
+                <h5 class="fw-bold mb-3"><i class="bi bi-pie-chart me-2 text-primary"></i>Pipeline Distribution</h5>
+                <div style="position: relative; height: 260px;">
+                    <canvas id="statusChart"></canvas>
+                </div>
+                <div class="row text-center mt-3 g-2">
+                    <div class="col-4">
+                        <small class="text-muted d-block">Draft</small>
+                        <strong th:text="${draftCount}">0</strong>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted d-block">Review</small>
+                        <strong th:text="${underReviewCount}">0</strong>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted d-block">Credit Apprv</small>
+                        <strong th:text="${creditApprovalCount}">0</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Lifecycle Workflow Visualizer -->
+        <div class="col-lg-7">
+            <div class="card card-custom h-100 p-3">
+                <h5 class="fw-bold mb-3"><i class="bi bi-diagram-3 me-2 text-primary"></i>Lending Lifecycle Stages</h5>
+                <div class="d-flex flex-wrap align-items-center justify-content-between p-3 bg-light rounded mb-3">
+                    <div class="text-center p-2">
+                        <span class="badge badge-status-DRAFT p-2 d-block mb-1">DRAFT</span>
+                        <small class="fw-bold text-muted" th:text="${draftCount} + ' Cases'">0 Cases</small>
+                    </div>
+                    <i class="bi bi-arrow-right text-muted fs-4"></i>
+                    <div class="text-center p-2">
+                        <span class="badge badge-status-UNDER_REVIEW p-2 d-block mb-1">UNDER_REVIEW</span>
+                        <small class="fw-bold text-muted" th:text="${underReviewCount} + ' Cases'">0 Cases</small>
+                    </div>
+                    <i class="bi bi-arrow-right text-muted fs-4"></i>
+                    <div class="text-center p-2">
+                        <span class="badge badge-status-CREDIT_APPROVAL p-2 d-block mb-1">CREDIT_APPROVAL</span>
+                        <small class="fw-bold text-muted" th:text="${creditApprovalCount} + ' Cases'">0 Cases</small>
+                    </div>
+                    <i class="bi bi-arrow-right text-muted fs-4"></i>
+                    <div class="text-center p-2">
+                        <span class="badge badge-status-DISBURSED p-2 d-block mb-1">DISBURSED</span>
+                        <small class="fw-bold text-muted" th:text="${disbursedCount} + ' Cases'">0 Cases</small>
+                    </div>
+                    <i class="bi bi-arrow-right text-muted fs-4"></i>
+                    <div class="text-center p-2">
+                        <span class="badge badge-status-EXIT p-2 d-block mb-1">EXIT</span>
+                        <small class="fw-bold text-muted">Core Synced</small>
+                    </div>
+                </div>
+
+                <div class="alert alert-info py-2 px-3 small mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong>Core Banking Automated Sync:</strong> Applications in <code>DISBURSED</code> are continuously claimed by the <code>CoreDataPush</code> utility and transitioned to <code>EXIT</code> upon insertion into <code>NG_CORE_BANKING</code>.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Applications Table -->
+    <div class="card card-custom p-3 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>Recent Loan Applications</h5>
+            <a th:href="@{/applications}" class="btn btn-sm btn-outline-primary">View All Applications</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-custom table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Application No</th>
+                        <th>Customer</th>
+                        <th>Product</th>
+                        <th>Requested Amount</th>
+                        <th>Tenure</th>
+                        <th>Proposed EMI</th>
+                        <th>Status</th>
+                        <th>Created Date</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="app : ${recentApplications}">
+                        <td class="fw-bold">
+                            <a th:href="@{'/applications/' + ${app.applicationId}}" th:text="${app.applicationNumber}" class="text-decoration-none">APP-0000</a>
+                        </td>
+                        <td th:text="${app.customer != null ? app.customer.fullName : 'Customer #' + app.customerId}">Customer Name</td>
+                        <td>
+                            <span class="badge bg-secondary" th:text="${app.productType}">PERSONAL</span>
+                        </td>
+                        <td class="fw-bold" th:text="${'₹' + #numbers.formatDecimal(app.requestedAmount, 1, 'COMMA', 2, 'POINT')}">₹1,00,000.00</td>
+                        <td th:text="${app.tenureMonths + ' Mos'}">12 Mos</td>
+                        <td th:text="${'₹' + #numbers.formatDecimal(app.proposedEmi, 1, 'COMMA', 2, 'POINT')}">₹8,884.88</td>
+                        <td>
+                            <span th:class="'badge badge-status-' + ${app.status}" th:text="${app.status}">DRAFT</span>
+                        </td>
+                        <td th:text="${app.createdAt != null ? #temporals.format(app.createdAt, 'dd-MMM-yyyy') : '-'}">Date</td>
+                        <td class="text-end">
+                            <a th:href="@{'/applications/' + ${app.applicationId}}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(recentApplications)}">
+                        <td colspan="9" class="text-center py-4 text-muted">No loan applications recorded yet.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Chart.js Script -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const draftCount = /*[[${draftCount}]]*/ 0;
+        const underReviewCount = /*[[${underReviewCount}]]*/ 0;
+        const creditApprovalCount = /*[[${creditApprovalCount}]]*/ 0;
+        const disbursedCount = /*[[${disbursedCount}]]*/ 0;
+        const rejectedCount = /*[[${rejectedCount}]]*/ 0;
+
+        const ctx = document.getElementById('statusChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Draft', 'Under Review', 'Credit Approval', 'Disbursed / Exit', 'Rejected'],
+                datasets: [{
+                    data: [draftCount, underReviewCount, creditApprovalCount, disbursedCount, rejectedCount],
+                    backgroundColor: ['#64748b', '#0284c7', '#f59e0b', '#10b981', '#ef4444'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { boxWidth: 12, font: { size: 11 } }
+                    }
+                }
+            }
+        });
+        /*]]>*/
+    </script>
+</div>
+</body>
+</html>

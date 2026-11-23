@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: html(content=~{::div#reviewerViewContent}, pageTitle='Review Application')}">
+<body>
+<div id="reviewerViewContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Underwriting Review: <span th:text="${application.applicationNumber}">APP-000</span></h3>
+            <span class="badge badge-status-UNDER_REVIEW fs-6">UNDER_REVIEW</span>
+        </div>
+        <a th:href="@{/reviewer}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Review Queue
+        </a>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Applicant Profile Card -->
+        <div class="col-lg-6">
+            <div class="card card-custom p-4 h-100">
+                <h5 class="fw-bold text-primary mb-3"><i class="bi bi-person-bounding-box me-2"></i>Applicant Verification</h5>
+                <div th:if="${application.customer != null}">
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <th class="text-muted w-40">Applicant Name:</th>
+                            <td class="fw-bold fs-6" th:text="${application.customer.fullName}">Name</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Customer Code:</th>
+                            <td th:text="${application.customer.customerCode}">CUST-000</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Date of Birth:</th>
+                            <td th:text="${#temporals.format(application.customer.dateOfBirth, 'dd-MMM-yyyy')}">DOB</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Mobile Number:</th>
+                            <td th:text="${application.customer.mobileNumber}">9876543210</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">KYC Document:</th>
+                            <td class="fw-bold" th:text="${application.customer.kycType + ': ' + application.customer.kycReference}">KYC</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Residential Address:</th>
+                            <td th:text="${application.customer.getFullAddress()}">Full Address</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Evaluation Card -->
+        <div class="col-lg-6">
+            <div class="card card-custom p-4 h-100">
+                <h5 class="fw-bold text-primary mb-3"><i class="bi bi-calculator me-2"></i>Financial & Risk Evaluation</h5>
+                <table class="table table-sm table-borderless">
+                    <tr>
+                        <th class="text-muted w-40">Product:</th>
+                        <td><span class="badge bg-secondary" th:text="${application.productType}">PERSONAL</span></td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Requested Amount:</th>
+                        <td class="fw-bold fs-5 text-primary"
+                            th:text="${'₹' + #numbers.formatDecimal(application.requestedAmount, 1, 'COMMA', 2, 'POINT')}">₹1,00,000.00</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Tenure:</th>
+                        <td th:text="${application.tenureMonths + ' Months'}">12 Months</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Net Monthly Income:</th>
+                        <td th:text="${'₹' + #numbers.formatDecimal(application.monthlyNetIncome, 1, 'COMMA', 2, 'POINT')}">₹30,000.00</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Existing Monthly Obligations:</th>
+                        <td th:text="${'₹' + #numbers.formatDecimal(application.existingMonthlyObligations, 1, 'COMMA', 2, 'POINT')}">₹5,000.00</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Calculated Monthly EMI:</th>
+                        <td class="fw-bold text-primary"
+                            th:text="${'₹' + #numbers.formatDecimal(application.proposedEmi, 1, 'COMMA', 2, 'POINT')}">₹8,884.88</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Calculated FOIR:</th>
+                        <td>
+                            <span class="badge bg-success fs-6" th:text="${application.foirPercentage + '% (Limit: 50%)'}">46.28%</span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviewer Decision Action Form -->
+    <div class="card card-custom p-4 border-2 border-primary mb-4">
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-check2-square me-2"></i>Record Reviewer Decision</h5>
+        <form th:action="@{'/reviewer/' + ${application.applicationId} + '/decision'}" method="post">
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Reviewer Staff Code <span class="text-danger">*</span></label>
+                    <input type="text" name="reviewerCode" class="form-control" required placeholder="e.g. REV-101" value="REV-101">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Decision Action <span class="text-danger">*</span></label>
+                    <select name="decision" class="form-select" required id="decisionSelect">
+                        <option value="CREDIT_APPROVAL">APPROVE (Advance to Credit Approval / Sanction)</option>
+                        <option value="REJECTED">REJECT (Decline Application)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold">
+                    Decision Remarks / Justification <span class="text-danger" id="remarksRequiredLabel">*</span>
+                </label>
+                <textarea name="remarks" class="form-control" rows="3" placeholder="Provide credit rationale or mandatory rejection reason..." required></textarea>
+                <div class="form-text text-danger" id="rejectionNote" style="display: none;">
+                    * Rejection requires a mandatory, non-empty reason per lending governance policy.
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <a th:href="@{/reviewer}" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary fw-bold px-4" id="submitBtn">
+                    Submit Underwriting Decision
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- History Timeline -->
+    <div class="card card-custom p-4">
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-clock-history me-2"></i>Prior Action Audit Trail</h5>
+        <div class="timeline mt-2">
+            <div th:each="h : ${historyList}" class="timeline-item">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-bold" th:text="${h.action}">ACTION</span>
+                    <small class="text-muted" th:text="${h.performedAt != null ? #temporals.format(h.performedAt, 'dd-MMM-yyyy HH:mm:ss') : '-'}">Timestamp</small>
+                </div>
+                <div class="small text-secondary mb-1">
+                    Transition: <span class="badge bg-secondary" th:text="${h.oldStatus != null ? h.oldStatus : 'INIT'}">OLD</span>
+                    <i class="bi bi-arrow-right mx-1"></i>
+                    <span class="badge bg-primary" th:text="${h.newStatus}">NEW</span>
+                    | Performed by: <strong th:text="${h.performedBy}">USER</strong>
+                </div>
+                <div class="text-muted small" th:text="${h.remarks}">Remarks</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('decisionSelect').addEventListener('change', function() {
+            const isReject = (this.value === 'REJECTED');
+            document.getElementById('rejectionNote').style.display = isReject ? 'block' : 'none';
+            const btn = document.getElementById('submitBtn');
+            if (isReject) {
+                btn.className = 'btn btn-danger fw-bold px-4';
+                btn.innerText = 'Reject Loan Application';
+            } else {
+                btn.className = 'btn btn-primary fw-bold px-4';
+                btn.innerText = 'Approve Loan Application';
+            }
+        });
+    </script>
+
+</div>
+</body>
+</html>

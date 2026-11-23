@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: html(content=~{::div#customerCreateContent}, pageTitle='Register New Customer')}">
+<body>
+<div id="customerCreateContent">
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold mb-0">Register New Customer</h4>
+                <a th:href="@{/customers}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back to List
+                </a>
+            </div>
+
+            <div class="card card-custom p-4">
+                <form th:action="@{/customers}" th:object="${customer}" method="post">
+                    
+                    <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">
+                        <i class="bi bi-person-badge me-1"></i> Basic Information
+                    </h6>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Full Legal Name <span class="text-danger">*</span></label>
+                            <input type="text" th:field="*{fullName}" class="form-control" required placeholder="e.g. Rahul Sharma">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Date of Birth <span class="text-danger">*</span></label>
+                            <input type="date" th:field="*{dateOfBirth}" class="form-control" required>
+                            <div class="form-text">Applicant must be between 21 and 60 completed years old.</div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Mobile Number <span class="text-danger">*</span></label>
+                            <input type="tel" th:field="*{mobileNumber}" class="form-control" required maxlength="10" pattern="[0-9]{10}" placeholder="10-digit mobile number">
+                            <div class="form-text">Must be unique and exactly 10 digits.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Email Address</label>
+                            <input type="email" th:field="*{email}" class="form-control" placeholder="name@example.com">
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">
+                        <i class="bi bi-geo-alt me-1"></i> Address Details (Downstream Core Banking Integration)
+                    </h6>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Street / Building Address <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{addressLine}" class="form-control" required placeholder="Flat / House No, Street, Landmark">
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">City <span class="text-danger">*</span></label>
+                            <input type="text" th:field="*{city}" class="form-control" required placeholder="City">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">State <span class="text-danger">*</span></label>
+                            <input type="text" th:field="*{state}" class="form-control" required placeholder="State">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Postal Code (PIN) <span class="text-danger">*</span></label>
+                            <input type="text" th:field="*{postalCode}" class="form-control" required placeholder="PIN Code">
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">
+                        <i class="bi bi-shield-lock me-1"></i> KYC & Verification
+                    </h6>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">KYC Document Type <span class="text-danger">*</span></label>
+                            <select th:field="*{kycType}" class="form-select" required>
+                                <option value="AADHAAR">Aadhaar Card</option>
+                                <option value="PAN">PAN Card</option>
+                                <option value="PASSPORT">Passport</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">KYC Document Number / Reference <span class="text-danger">*</span></label>
+                            <input type="text" th:field="*{kycReference}" class="form-control" required placeholder="Document Reference ID">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                        <a th:href="@{/customers}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary fw-bold">
+                            <i class="bi bi-check2-circle me-1"></i> Register Customer
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,81 @@
+# ============================================================================
+# LoanSphere - Git Ignore Configuration
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Build Artifacts & Dependency Caches
+# ----------------------------------------------------------------------------
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+*.rar
+
+# ----------------------------------------------------------------------------
+# Environment Configurations & Local Secrets
+# ----------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+application-local.properties
+application-*-local.properties
+
+# ----------------------------------------------------------------------------
+# Log Files & Runtime Exports
+# ----------------------------------------------------------------------------
+*.log
+logs/
+exports/
+*.csv
+
+# ----------------------------------------------------------------------------
+# macOS & Operating System Metadata
+# ----------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ----------------------------------------------------------------------------
+# IDE & Code Editor Temporary Files
+# ----------------------------------------------------------------------------
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# Eclipse
+.classpath
+.project
+.settings/
+.metadata/
+bin/
+tmp/
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# Temporary / Scratch Files
+*.tmp
+*.bak
+*.swp
+*~
+cp.txt

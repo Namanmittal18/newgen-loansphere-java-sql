@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: html(content=~{::div#customerListContent}, pageTitle='Customer Management')}">
+<body>
+<div id="customerListContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Customer Management</h3>
+            <p class="text-muted small mb-0">Search, view and register applicant customer profiles.</p>
+        </div>
+        <a th:href="@{/customers/new}" class="btn btn-primary">
+            <i class="bi bi-person-plus-fill me-1"></i> Register New Customer
+        </a>
+    </div>
+
+    <!-- Search Card -->
+    <div class="card card-custom p-3 mb-4">
+        <form th:action="@{/customers}" method="get" class="row g-2 align-items-center">
+            <div class="col-md-9">
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control"
+                           placeholder="Search by Customer Name, 10-digit Mobile Number, or Customer Code (CUST-...)"
+                           th:value="${searchTerm}">
+                </div>
+            </div>
+            <div class="col-md-3 d-flex">
+                <button type="submit" class="btn btn-primary me-2 flex-grow-1">Search</button>
+                <a th:href="@{/customers}" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Customers Table -->
+    <div class="card card-custom p-3">
+        <div class="table-responsive">
+            <table class="table table-custom table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Full Name</th>
+                        <th>Date of Birth</th>
+                        <th>Mobile Number</th>
+                        <th>Location</th>
+                        <th>KYC Details</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="c : ${customers}">
+                        <td class="fw-bold">
+                            <a th:href="@{'/customers/' + ${c.customerId}}" th:text="${c.customerCode}" class="text-decoration-none">CUST-0000</a>
+                        </td>
+                        <td class="fw-semibold" th:text="${c.fullName}">Customer Name</td>
+                        <td th:text="${c.dateOfBirth != null ? #temporals.format(c.dateOfBirth, 'dd-MMM-yyyy') : '-'}">DOB</td>
+                        <td th:text="${c.mobileNumber}">9876543210</td>
+                        <td th:text="${c.city + ', ' + c.state}">City, State</td>
+                        <td>
+                            <span class="badge bg-light text-dark border" th:text="${c.kycType + ': ' + c.kycReference}">AADHAAR</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-success" th:text="${c.kycStatus}">VERIFIED</span>
+                        </td>
+                        <td class="text-end">
+                            <a th:href="@{'/customers/' + ${c.customerId}}" class="btn btn-sm btn-outline-primary me-1">
+                                <i class="bi bi-person-lines-fill"></i> View
+                            </a>
+                            <a th:href="@{'/applications/new?customerId=' + ${c.customerId}}" class="btn btn-sm btn-outline-warning text-dark">
+                                <i class="bi bi-plus-circle"></i> Apply Loan
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(customers)}">
+                        <td colspan="8" class="text-center py-4 text-muted">No customers found matching the search criteria.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

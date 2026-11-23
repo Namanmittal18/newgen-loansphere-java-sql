@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: html(content=~{::div#utilitiesContent}, pageTitle='System Utilities')}">
+<body>
+<div id="utilitiesContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">System Background Utilities Control Center</h3>
+            <p class="text-muted small mb-0">Manage and manually trigger background daemon workers with transaction integrity and repeat-run protection.</p>
+        </div>
+        <div>
+            <span class="badge bg-light text-dark border p-2">
+                <i class="bi bi-clock me-1"></i> Current Business Date: <strong th:text="${currentBusinessDate}">2026-11-23</strong>
+            </span>
+        </div>
+    </div>
+
+    <!-- Utility Action Cards -->
+    <div class="row g-4 mb-4">
+        <!-- 1. Overdue Review Utility Card -->
+        <div class="col-lg-6">
+            <div class="card card-custom p-4 h-100 border-start border-4 border-warning">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="fw-bold text-dark"><i class="bi bi-alarm-fill text-warning me-2"></i>1. Overdue Review Utility</h5>
+                    <span class="badge bg-warning text-dark">Daily Scheduled</span>
+                </div>
+                <p class="text-muted small">
+                    Monitors applications in <code>UNDER_REVIEW</code>. Applications with > 2 calendar days waiting are flagged with a persistent <code>REVIEW_OVERDUE</code> alert. Exports all pending reviews to CSV (<code>pending_reviews_YYYYMMDD.csv</code>).
+                </p>
+
+                <form th:action="@{/utilities/overdue/run}" method="post" class="mt-auto pt-3 border-top">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-sm-7">
+                            <label class="form-label small text-muted mb-1">Simulate Business Date (Testing):</label>
+                            <input type="date" name="simulatedDate" class="form-control form-control-sm" th:value="${currentBusinessDate}">
+                        </div>
+                        <div class="col-sm-5 d-flex align-items-end">
+                            <button type="submit" class="btn btn-warning text-dark fw-bold w-100 mt-auto">
+                                <i class="bi bi-play-circle-fill me-1"></i> Run Utility Now
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 2. CoreDataPush Utility Card -->
+        <div class="col-lg-6">
+            <div class="card card-custom p-4 h-100 border-start border-4 border-success">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="fw-bold text-dark"><i class="bi bi-arrow-repeat text-success me-2"></i>2. CoreDataPush Utility</h5>
+                    <span class="badge bg-success">Continuous Daemon</span>
+                </div>
+                <p class="text-muted small">
+                    Claims all cases in <code>DISBURSED</code> stage, inserts customer, loan and disbursement information into <code>NG_CORE_BANKING</code>, and atomically advances application to <code>EXIT</code>. Idempotent and crash-safe.
+                </p>
+
+                <form th:action="@{/utilities/corepush/run}" method="post" class="mt-auto pt-3 border-top">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-muted">Destination: <code>NG_CORE_BANKING</code> table</span>
+                        <button type="submit" class="btn btn-success fw-bold">
+                            <i class="bi bi-cloud-upload-fill me-1"></i> Run CoreDataPush Now
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active System Alerts -->
+    <div class="card card-custom p-4 mb-4">
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-bell-fill me-2 text-warning"></i>Active System Alerts (SYSTEM_ALERTS)</h5>
+        <div class="table-responsive">
+            <table class="table table-custom table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Alert ID</th>
+                        <th>Application Number</th>
+                        <th>Customer</th>
+                        <th>Alert Type</th>
+                        <th>Generated Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="a : ${alerts}">
+                        <td th:text="${a.alertId}">1</td>
+                        <td class="fw-bold">
+                            <a th:href="@{'/applications/' + ${a.applicationId}}" th:text="${a.applicationNumber != null ? a.applicationNumber : 'App #' + a.applicationId}">APP-000</a>
+                        </td>
+                        <td th:text="${a.customerName != null ? a.customerName : '-'}">Customer</td>
+                        <td>
+                            <span class="badge bg-danger" th:text="${a.alertType}">REVIEW_OVERDUE</span>
+                        </td>
+                        <td th:text="${a.createdAt != null ? #temporals.format(a.createdAt, 'dd-MMM-yyyy HH:mm:ss') : '-'}">Timestamp</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(alerts)}">
+                        <td colspan="5" class="text-center py-4 text-muted">No system alerts recorded.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Core Banking Integration Table -->
+    <div class="card card-custom p-4 mb-4">
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-bank2 me-2"></i>Core Banking Integration Records (NG_CORE_BANKING)</h5>
+        <div class="table-responsive">
+            <table class="table table-custom table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Core ID</th>
+                        <th>Application ID</th>
+                        <th>Customer Name</th>
+                        <th>KYC Details</th>
+                        <th>Approved Amount</th>
+                        <th>Disbursed Amount</th>
+                        <th>Disbursed Date</th>
+                        <th>Pushed At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="c : ${coreBankingRecords}">
+                        <td th:text="${c.coreBankingId}">1</td>
+                        <td class="fw-bold">
+                            <a th:href="@{'/applications/' + ${c.applicationId}}" th:text="'App #' + ${c.applicationId}">App</a>
+                        </td>
+                        <td class="fw-semibold" th:text="${c.customerName}">Name</td>
+                        <td th:text="${c.kycDetails}">AADHAAR</td>
+                        <td class="fw-bold" th:text="${'₹' + #numbers.formatDecimal(c.approvedAmount, 1, 'COMMA', 2, 'POINT')}">₹1,00,000.00</td>
+                        <td class="fw-bold text-success" th:text="${'₹' + #numbers.formatDecimal(c.disbursedAmount, 1, 'COMMA', 2, 'POINT')}">₹1,00,000.00</td>
+                        <td th:text="${c.disbursedDate != null ? #temporals.format(c.disbursedDate, 'dd-MMM-yyyy HH:mm') : '-'}">Date</td>
+                        <td th:text="${c.pushedAt != null ? #temporals.format(c.pushedAt, 'dd-MMM-yyyy HH:mm:ss') : '-'}">Pushed</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(coreBankingRecords)}">
+                        <td colspan="8" class="text-center py-4 text-muted">No records pushed to NG_CORE_BANKING yet.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Utility Run Execution Log Table -->
+    <div class="card card-custom p-4">
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-cpu me-2"></i>Utility Execution History (UTILITY_RUN)</h5>
+        <div class="table-responsive">
+            <table class="table table-custom table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Run ID</th>
+                        <th>Utility Name</th>
+                        <th>Started At</th>
+                        <th>Completed At</th>
+                        <th>Result</th>
+                        <th>Processed</th>
+                        <th>Alerts Created</th>
+                        <th>Error Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="r : ${utilityRuns}">
+                        <td th:text="${r.runId}">1</td>
+                        <td class="fw-bold" th:text="${r.utilityName}">OVERDUE_REVIEW_JOB</td>
+                        <td th:text="${r.startedAt != null ? #temporals.format(r.startedAt, 'dd-MMM-yyyy HH:mm:ss') : '-'}">Started</td>
+                        <td th:text="${r.completedAt != null ? #temporals.format(r.completedAt, 'dd-MMM-yyyy HH:mm:ss') : '-'}">Completed</td>
+                        <td>
+                            <span th:class="'badge ' + (${r.result == T(com.newgen.loanorigination.model.enums.UtilityResult).SUCCESS} ? 'bg-success' : 'bg-danger')"
+                                  th:text="${r.result}">SUCCESS</span>
+                        </td>
+                        <td th:text="${r.applicationsProcessed}">0</td>
+                        <td th:text="${r.alertsCreated}">0</td>
+                        <td class="small text-danger" th:text="${r.errorMessage != null ? r.errorMessage : '-'}">-</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(utilityRuns)}">
+                        <td colspan="8" class="text-center py-4 text-muted">No utility executions recorded yet.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
