@@ -21,7 +21,7 @@ $$\text{Customer Registration} \longrightarrow \text{Loan Application} \longrigh
 - **Financial Calculation Engine**: Pure `BigDecimal` arithmetic with `RoundingMode.HALF_UP` and Indian currency formatting (`₹##,##,###.##`).
 - **Document Generation**: OpenPDF for vector-rendered Loan Sanction & Application Form PDF generation.
 - **Background Schedulers**: `ScheduledExecutorService` / Spring Schedulers for Overdue Review and CoreDataPush daemons.
-- **Testing**: JUnit 5, Mockito, AssertJ verifying all 31 mandatory assignment scenarios.
+- **Testing**: JUnit 5, Mockito, AssertJ (29 automated unit tests passed; integration suites pending).
 
 ---
 
@@ -63,7 +63,7 @@ Java Project/
     │       ├── application.properties    # Central configuration
     │       └── templates/                # Bootstrap 5 + Thymeleaf HTML views
     └── test/
-        └── java/com/newgen/loanorigination/ # JUnit 5 test suites covering 31 scenarios
+        └── java/com/newgen/loanorigination/ # JUnit 5 test suites (29 automated unit tests)
 ```
 
 ---
@@ -160,43 +160,53 @@ java -jar target/loan-origination-system-1.0.0.jar --console
 
 ## 7. Running Tests & Boundary Verification
 
-Run the complete JUnit 5 automated test suite:
+Run the JUnit 5 automated test suite:
 ```bash
 mvn test
 ```
 
-### 31 Mandatory Test Scenarios Checklist
-- [x] **01.** PERSONAL minimum loan amount (₹50,000 accepted; ₹49,999 rejected)
-- [x] **02.** PERSONAL maximum loan amount (₹5,00,000 accepted; ₹5,00,001 rejected)
-- [x] **03.** EDUCATION minimum loan amount (₹1,00,000 accepted; ₹99,999 rejected)
-- [x] **04.** EDUCATION maximum loan amount (₹10,00,000 accepted; ₹10,00,001 rejected)
-- [x] **05.** Minimum and maximum tenure boundaries (12 to 60 for Personal; 12 to 84 for Education)
-- [x] **06.** Age 20 completed years on submission – rejected
-- [x] **07.** Age 21 completed years on submission – accepted
-- [x] **08.** Age 60 completed years on submission – accepted
-- [x] **09.** Age 61 completed years on submission – rejected
-- [x] **10.** Future date of birth – rejected
-- [x] **11.** Duplicate 10-digit mobile number – rejected
-- [x] **12.** Duplicate active application for same customer and product – rejected
-- [x] **13.** New application after rejection or exit – allowed
-- [x] **14.** Worked EMI example exact match: **₹1,00,000 @ 12% for 12 mos = ₹8,884.88**
-- [x] **15.** FOIR exactly 50.00% – eligible
-- [x] **16.** FOIR above 50.00% (e.g. 52.95%) – ineligible
-- [x] **17.** Negative monthly obligations – rejected
-- [x] **18.** Zero or negative monthly net income – rejected
-- [x] **19.** Invalid state transitions (e.g. DRAFT $\to$ DISBURSED) – rejected
-- [x] **20.** Missing rejection reason – rejected
-- [x] **21.** Duplicate disbursement reference – rejected
-- [x] **22.** Repeated disbursement on already disbursed application – rejected
-- [x] **23.** Disbursement before approval – rejected
-- [x] **24.** Transaction failure – full rollback
-- [x] **25.** Review age exactly 2 calendar days – not overdue
-- [x] **26.** Review age 3 calendar days – overdue
-- [x] **27.** Repeated overdue utility execution – no duplicate alerts created
-- [x] **28.** Failed core banking push – remains retryable in DISBURSED
-- [x] **29.** Repeated core banking push – no duplicate rows in NG_CORE_BANKING
-- [x] **30.** Successful core banking push – transitions to EXIT
-- [x] **31.** Application restart – records persist in database
+### Automated Verification Status
+
+- **Automated Unit Tests**: **29 Passed, 0 Failed** (100% pass rate across executed unit suites).
+- **Service & Integration Tests Pending**:
+  - **Duplicate mobile service test** (`CustomerServiceTest`) – pending dedicated unit test.
+  - **Transaction rollback integration test** (`TransactionRollbackTest`) – pending automated multi-table rollback assertion.
+  - **Live MySQL integration testing** – pending execution against an active MySQL server daemon (schema and seed verified; H2 available for test profiles).
+  - **PDF automated verification** – pending automated byte/layout assertion test (manual / visual verification via controller is active).
+
+### 31 Mandatory Test Scenarios Traceability
+
+- [x] **01.** PERSONAL minimum loan amount (₹50,000 accepted; ₹49,999 rejected) – `ProductValidatorTest` (**PASS**)
+- [x] **02.** PERSONAL maximum loan amount (₹5,00,000 accepted; ₹5,00,001 rejected) – `ProductValidatorTest` (**PASS**)
+- [x] **03.** EDUCATION minimum loan amount (₹1,00,000 accepted; ₹99,999 rejected) – `ProductValidatorTest` (**PASS**)
+- [x] **04.** EDUCATION maximum loan amount (₹10,00,000 accepted; ₹10,00,001 rejected) – `ProductValidatorTest` (**PASS**)
+- [x] **05.** Minimum and maximum tenure boundaries (12 to 60 for Personal; 12 to 84 for Education) – `ProductValidatorTest` (**PASS**)
+- [x] **06.** Age 20 completed years on submission – rejected – `CustomerValidatorTest` (**PASS**)
+- [x] **07.** Age 21 completed years on submission – accepted – `CustomerValidatorTest` (**PASS**)
+- [x] **08.** Age 60 completed years on submission – accepted – `CustomerValidatorTest` (**PASS**)
+- [x] **09.** Age 61 completed years on submission – rejected – `CustomerValidatorTest` (**PASS**)
+- [x] **10.** Future date of birth – rejected – `CustomerValidatorTest` (**PASS**)
+- [ ] **11.** Duplicate 10-digit mobile number registration – rejected (*Automated CustomerService unit test pending*)
+- [x] **12.** Duplicate active application for same customer and product – rejected – `LoanApplicationServiceTest` (**PASS**)
+- [x] **13.** New application after rejection or exit – allowed – `LoanApplicationServiceTest` (**PASS**)
+- [x] **14.** Worked EMI example exact match: **₹1,00,000 @ 12% for 12 mos = ₹8,884.88** – `FinancialCalculationServiceTest` (**PASS**)
+- [x] **15.** FOIR exactly 50.00% – eligible – `FinancialCalculationServiceTest` (**PASS**)
+- [x] **16.** FOIR above 50.00% (e.g. 52.95%) – ineligible – `FinancialCalculationServiceTest` (**PASS**)
+- [x] **17.** Negative monthly obligations – rejected – `ProductValidatorTest` (**PASS**)
+- [x] **18.** Zero or negative monthly net income – rejected – `ProductValidatorTest` (**PASS**)
+- [x] **19.** Invalid state transitions (e.g. DRAFT $\to$ DISBURSED) – rejected – `WorkflowValidatorTest` (**PASS**)
+- [x] **20.** Missing rejection reason – rejected – `WorkflowValidatorTest` (**PASS**)
+- [x] **21.** Duplicate disbursement reference – rejected – `DisbursementServiceTest` (**PASS**)
+- [x] **22.** Repeated disbursement on already disbursed application – rejected – `DisbursementServiceTest` (**PASS**)
+- [x] **23.** Disbursement before approval – rejected – `DisbursementServiceTest` (**PASS**)
+- [ ] **24.** Transaction failure – full rollback (*Automated transaction rollback integration test pending*)
+- [x] **25.** Review age exactly 2 calendar days – not overdue – `OverdueReviewSchedulerTest` (**PASS**)
+- [x] **26.** Review age 3 calendar days – overdue – `OverdueReviewSchedulerTest` (**PASS**)
+- [x] **27.** Repeated overdue utility execution – no duplicate alerts created – `OverdueReviewSchedulerTest` (**PASS**)
+- [x] **28.** Failed core banking push – remains retryable in DISBURSED – `CoreBankingSchedulerTest` (**PASS**)
+- [x] **29.** Repeated core banking push – no duplicate rows in NG_CORE_BANKING – `CoreBankingSchedulerTest` (**PASS**)
+- [x] **30.** Successful core banking push – transitions to EXIT – `CoreBankingSchedulerTest` (**PASS**)
+- [ ] **31.** Application restart – records persist in database (*Live MySQL integration testing pending*)
 
 ---
 
