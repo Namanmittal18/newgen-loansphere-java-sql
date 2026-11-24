@@ -167,11 +167,12 @@ mvn test
 
 ### Automated Verification Status
 
-- **Automated Unit & Integration Tests**: **35 Passed, 0 Failed** across 10 test classes (100% pass rate).
-  - Duplicate Mobile Registration & Immutability: Verified via `CustomerServiceTest` (**PASS**).
-  - Multi-Table Transaction Rollback & Atomicity: Verified via `TransactionRollbackTest` against real H2 database tables (**PASS**).
+- **Automated Unit & Integration Tests**: **35 Passed, 0 Failed, 9 Skipped** across 11 test classes.
+  - Core Domain & Calculation Unit Tests (32 tests): **PASS**.
+  - Multi-Table Transaction Rollback (`TransactionRollbackTest`): **PASS**.
+  - Dedicated MySQL Integration Suite (`MySqlIntegrationTest` - 9 tests): **SKIPPED** (MySQL daemon offline on port 3306).
 - **Subsequent Phase Verifications Pending**:
-  - **Live MySQL integration testing** (Phase 3) – pending execution against an active MySQL server daemon (schema and seed verified; H2 in-memory compatibility verified).
+  - **Live MySQL daemon start & execution** (Phase 3) – integration tests ready; pending active MySQL service on `localhost:3306`.
   - **PDF automated verification** (Phase 4) – pending automated byte/layout assertion test.
   - **Persistence verification** (Phase 5) – pending application context restart verification.
 

@@ -140,3 +140,11 @@ GROUP BY c.customer_id, c.customer_code, c.full_name, c.mobile_number
 HAVING COUNT(la.application_id) > 1
 ORDER BY total_applications DESC, total_requested_amount DESC;
 ```
+
+---
+
+### Database Engine Verification & Integration Status
+- All 6 reports use parameterized SQL statements implemented in [ReportDAOImpl.java](file:///Users/namanmittal/Desktop/Java%20Project/src/main/java/com/newgen/loanorigination/dao/ReportDAOImpl.java) with explicit parameter binding (`?`), avoiding any string concatenation.
+- Queries are ANSI-SQL / MySQL 8.x compliant and verified compatible with MySQL-compatible in-memory engines.
+- Test assertions covering all 6 report query executions are codified in [src/test/java/com/newgen/loanorigination/MySqlIntegrationTest.java](file:///Users/namanmittal/Desktop/Java%20Project/src/test/java/com/newgen/loanorigination/MySqlIntegrationTest.java).
+- Live execution against an active MySQL server is pending until the local MySQL daemon (`mysqld`) is started on `localhost:3306`.

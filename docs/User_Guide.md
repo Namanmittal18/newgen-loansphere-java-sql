@@ -108,3 +108,35 @@ Access the dashboard in your web browser:
 2. Click **Run Utility Now** (optionally input a simulated business date for time travel testing).
 3. Applications in `UNDER_REVIEW` older than 2 calendar days are flagged with `REVIEW_OVERDUE` in `SYSTEM_ALERTS` without changing loan status.
 4. CSV extract `pending_reviews_YYYYMMDD.csv` is generated in `./exports`.
+
+---
+
+### 3. MySQL Database Setup & Live Integration Guide
+
+#### 3.1 Prerequisites for MySQL Execution
+1. Install MySQL 8.x (e.g. via Homebrew on macOS):
+   ```bash
+   brew install mysql
+   brew services start mysql
+   ```
+2. Create and provision the database:
+   ```bash
+   mysql -u root -p
+   ```
+   ```sql
+   source database/schema.sql;
+   source database/seed.sql;
+   ```
+
+#### 3.2 Running Live MySQL Integration Tests
+Once the MySQL server daemon is active on port 3306:
+```bash
+# Override database credentials if needed:
+export DB_URL="jdbc:mysql://localhost:3306/newgen_loan_origination?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata"
+export DB_USERNAME="root"
+export DB_PASSWORD="your_password"
+
+# Execute test suite:
+mvn test -Dtest=MySqlIntegrationTest
+```
+*Note: When MySQL is offline, live MySQL tests are safely skipped via JUnit 5 dynamic assumptions without blocking unit test builds.*
