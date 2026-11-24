@@ -19,7 +19,8 @@ public class StandaloneTestRunner {
                 LoanApplicationServiceTest.class,
                 DisbursementServiceTest.class,
                 OverdueReviewSchedulerTest.class,
-                CoreBankingSchedulerTest.class
+                CoreBankingSchedulerTest.class,
+                TransactionRollbackTest.class
         );
 
         int totalTests = 0;

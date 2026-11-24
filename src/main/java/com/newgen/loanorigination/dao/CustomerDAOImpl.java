@@ -75,8 +75,9 @@ public class CustomerDAOImpl implements CustomerDAO {
                 return ps;
             }, keyHolder);
 
-            if (keyHolder.getKey() != null) {
-                customer.setCustomerId(keyHolder.getKey().longValue());
+            Long generatedId = com.newgen.loanorigination.utility.JdbcUtils.extractGeneratedKey(keyHolder, "customer_id");
+            if (generatedId != null) {
+                customer.setCustomerId(generatedId);
             }
             return customer;
         } catch (DataAccessException e) {

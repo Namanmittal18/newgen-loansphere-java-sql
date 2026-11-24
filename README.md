@@ -21,7 +21,7 @@ $$\text{Customer Registration} \longrightarrow \text{Loan Application} \longrigh
 - **Financial Calculation Engine**: Pure `BigDecimal` arithmetic with `RoundingMode.HALF_UP` and Indian currency formatting (`₹##,##,###.##`).
 - **Document Generation**: OpenPDF for vector-rendered Loan Sanction & Application Form PDF generation.
 - **Background Schedulers**: `ScheduledExecutorService` / Spring Schedulers for Overdue Review and CoreDataPush daemons.
-- **Testing**: JUnit 5, Mockito, AssertJ (29 automated unit tests passed; integration suites pending).
+- **Testing**: JUnit 5, Mockito, AssertJ (35 automated tests passed; live MySQL & PDF verification pending).
 
 ---
 
@@ -63,7 +63,7 @@ Java Project/
     │       ├── application.properties    # Central configuration
     │       └── templates/                # Bootstrap 5 + Thymeleaf HTML views
     └── test/
-        └── java/com/newgen/loanorigination/ # JUnit 5 test suites (29 automated unit tests)
+        └── java/com/newgen/loanorigination/ # JUnit 5 test suites (35 automated unit & integration tests)
 ```
 
 ---
@@ -167,12 +167,13 @@ mvn test
 
 ### Automated Verification Status
 
-- **Automated Unit Tests**: **29 Passed, 0 Failed** (100% pass rate across executed unit suites).
-- **Service & Integration Tests Pending**:
-  - **Duplicate mobile service test** (`CustomerServiceTest`) – pending dedicated unit test.
-  - **Transaction rollback integration test** (`TransactionRollbackTest`) – pending automated multi-table rollback assertion.
-  - **Live MySQL integration testing** – pending execution against an active MySQL server daemon (schema and seed verified; H2 available for test profiles).
-  - **PDF automated verification** – pending automated byte/layout assertion test (manual / visual verification via controller is active).
+- **Automated Unit & Integration Tests**: **35 Passed, 0 Failed** across 10 test classes (100% pass rate).
+  - Duplicate Mobile Registration & Immutability: Verified via `CustomerServiceTest` (**PASS**).
+  - Multi-Table Transaction Rollback & Atomicity: Verified via `TransactionRollbackTest` against real H2 database tables (**PASS**).
+- **Subsequent Phase Verifications Pending**:
+  - **Live MySQL integration testing** (Phase 3) – pending execution against an active MySQL server daemon (schema and seed verified; H2 in-memory compatibility verified).
+  - **PDF automated verification** (Phase 4) – pending automated byte/layout assertion test.
+  - **Persistence verification** (Phase 5) – pending application context restart verification.
 
 ### 31 Mandatory Test Scenarios Traceability
 
@@ -186,7 +187,7 @@ mvn test
 - [x] **08.** Age 60 completed years on submission – accepted – `CustomerValidatorTest` (**PASS**)
 - [x] **09.** Age 61 completed years on submission – rejected – `CustomerValidatorTest` (**PASS**)
 - [x] **10.** Future date of birth – rejected – `CustomerValidatorTest` (**PASS**)
-- [ ] **11.** Duplicate 10-digit mobile number registration – rejected (*Automated CustomerService unit test pending*)
+- [x] **11.** Duplicate 10-digit mobile number registration – rejected – `CustomerServiceTest` (**PASS**)
 - [x] **12.** Duplicate active application for same customer and product – rejected – `LoanApplicationServiceTest` (**PASS**)
 - [x] **13.** New application after rejection or exit – allowed – `LoanApplicationServiceTest` (**PASS**)
 - [x] **14.** Worked EMI example exact match: **₹1,00,000 @ 12% for 12 mos = ₹8,884.88** – `FinancialCalculationServiceTest` (**PASS**)
@@ -199,14 +200,14 @@ mvn test
 - [x] **21.** Duplicate disbursement reference – rejected – `DisbursementServiceTest` (**PASS**)
 - [x] **22.** Repeated disbursement on already disbursed application – rejected – `DisbursementServiceTest` (**PASS**)
 - [x] **23.** Disbursement before approval – rejected – `DisbursementServiceTest` (**PASS**)
-- [ ] **24.** Transaction failure – full rollback (*Automated transaction rollback integration test pending*)
+- [x] **24.** Transaction failure – full rollback – `TransactionRollbackTest` (**PASS**)
 - [x] **25.** Review age exactly 2 calendar days – not overdue – `OverdueReviewSchedulerTest` (**PASS**)
 - [x] **26.** Review age 3 calendar days – overdue – `OverdueReviewSchedulerTest` (**PASS**)
 - [x] **27.** Repeated overdue utility execution – no duplicate alerts created – `OverdueReviewSchedulerTest` (**PASS**)
 - [x] **28.** Failed core banking push – remains retryable in DISBURSED – `CoreBankingSchedulerTest` (**PASS**)
 - [x] **29.** Repeated core banking push – no duplicate rows in NG_CORE_BANKING – `CoreBankingSchedulerTest` (**PASS**)
 - [x] **30.** Successful core banking push – transitions to EXIT – `CoreBankingSchedulerTest` (**PASS**)
-- [ ] **31.** Application restart – records persist in database (*Live MySQL integration testing pending*)
+- [ ] **31.** Application restart – records persist in database (*Phase 5 persistence verification pending*)
 
 ---
 

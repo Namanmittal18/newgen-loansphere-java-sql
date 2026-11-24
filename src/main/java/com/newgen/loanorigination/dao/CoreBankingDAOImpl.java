@@ -69,8 +69,9 @@ public class CoreBankingDAOImpl implements CoreBankingDAO {
                 return ps;
             }, keyHolder);
 
-            if (keyHolder.getKey() != null) {
-                record.setCoreBankingId(keyHolder.getKey().longValue());
+            Long generatedId = com.newgen.loanorigination.utility.JdbcUtils.extractGeneratedKey(keyHolder, "core_banking_id");
+            if (generatedId != null) {
+                record.setCoreBankingId(generatedId);
             }
             return record;
         } catch (DataAccessException e) {

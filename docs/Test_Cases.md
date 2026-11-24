@@ -37,7 +37,18 @@
 | **28** | Failed core banking push – remains retryable | `CoreBankingSchedulerTest` | DB failure during sync | Application remains `DISBURSED`, retryable | Match | **PASS** |
 | **29** | Repeated core banking push – no duplicates | `CoreBankingSchedulerTest` | Already pushed record claimed | Unique key prevents insert; marked EXIT | Match | **PASS** |
 | **30** | Successful core banking push – EXIT | `CoreBankingSchedulerTest` | Disbursed loan processed | Record in `NG_CORE_BANKING`, status = EXIT | Match | **PASS** |
-| **31** | Restart application – records persist | Integration Verification | Restart context & query database | All applications, customers, ledgers persist | Match | **PASS** |
+| **31** | Restart application – records persist | Integration Verification | Restart context & query database | All applications, customers, ledgers persist | Pending Phase 5 verification | **PENDING** |
+
+---
+
+### Verification Execution Status (Phase 2 Completed)
+- **Automated Tests Executed**: **35 Passed, 0 Failed, 0 Skipped** across 10 test suites.
+- **Scenario 11 (Duplicate Mobile Registration)**: Formally verified via `CustomerServiceTest` (**PASS**).
+- **Scenario 24 (Multi-Table Transaction Rollback)**: Formally verified via `TransactionRollbackTest` against real H2 database tables (**PASS**).
+- **Remaining Pending Scenarios**:
+  - Phase 3: Live MySQL Integration & 6 SQL Reports Verification.
+  - Phase 4: Application Form PDF Automated Byte Verification.
+  - Phase 5: Complete Database Records Persistence across Restart (Scenario 31).
 
 ---
 

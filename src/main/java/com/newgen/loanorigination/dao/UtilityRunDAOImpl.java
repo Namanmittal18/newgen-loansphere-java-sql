@@ -54,8 +54,9 @@ public class UtilityRunDAOImpl implements UtilityRunDAO {
                 return ps;
             }, keyHolder);
 
-            if (keyHolder.getKey() != null) {
-                return keyHolder.getKey().longValue();
+            Long generatedId = com.newgen.loanorigination.utility.JdbcUtils.extractGeneratedKey(keyHolder, "run_id");
+            if (generatedId != null) {
+                return generatedId;
             }
             throw new DatabaseOperationException("Failed to obtain generated ID for utility run.");
         } catch (DataAccessException e) {

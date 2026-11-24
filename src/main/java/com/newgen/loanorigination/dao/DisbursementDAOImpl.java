@@ -53,8 +53,9 @@ public class DisbursementDAOImpl implements DisbursementDAO {
                 return ps;
             }, keyHolder);
 
-            if (keyHolder.getKey() != null) {
-                disbursement.setDisbursementId(keyHolder.getKey().longValue());
+            Long generatedId = com.newgen.loanorigination.utility.JdbcUtils.extractGeneratedKey(keyHolder, "disbursement_id");
+            if (generatedId != null) {
+                disbursement.setDisbursementId(generatedId);
             }
             return disbursement;
         } catch (DataAccessException e) {

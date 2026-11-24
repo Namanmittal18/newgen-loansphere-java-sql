@@ -109,8 +109,9 @@ public class LoanApplicationDAOImpl implements LoanApplicationDAO {
                 return ps;
             }, keyHolder);
 
-            if (keyHolder.getKey() != null) {
-                application.setApplicationId(keyHolder.getKey().longValue());
+            Long generatedId = com.newgen.loanorigination.utility.JdbcUtils.extractGeneratedKey(keyHolder, "application_id");
+            if (generatedId != null) {
+                application.setApplicationId(generatedId);
             }
             return application;
         } catch (DataAccessException e) {
