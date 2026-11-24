@@ -62,15 +62,15 @@ public class DisbursementService {
         LoanApplication app = loanApplicationDAO.findById(applicationId)
                 .orElseThrow(() -> new ApplicationNotFoundException("Application not found with ID: " + applicationId));
 
-        if (app.getStatus() != ApplicationStatus.CREDIT_APPROVAL) {
-            throw new InvalidApplicationStateException(String.format(
-                    "Only applications in CREDIT_APPROVAL status can be disbursed. Current status: %s", app.getStatus()));
-        }
-
-        // Check for repeated disbursement
+        // Check for repeated disbursement first
         if (disbursementDAO.existsByApplicationId(applicationId)) {
             throw new DisbursementException("Repeated disbursement rejected: Loan application " +
                     app.getApplicationNumber() + " has already been disbursed.");
+        }
+
+        if (app.getStatus() != ApplicationStatus.CREDIT_APPROVAL) {
+            throw new InvalidApplicationStateException(String.format(
+                    "Only applications in CREDIT_APPROVAL status can be disbursed. Current status: %s", app.getStatus()));
         }
 
         Customer customer = customerDAO.findById(app.getCustomerId())

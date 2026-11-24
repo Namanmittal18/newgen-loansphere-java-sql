@@ -21,7 +21,7 @@ $$\text{Customer Registration} \longrightarrow \text{Loan Application} \longrigh
 - **Financial Calculation Engine**: Pure `BigDecimal` arithmetic with `RoundingMode.HALF_UP` and Indian currency formatting (`₹##,##,###.##`).
 - **Document Generation**: OpenPDF for vector-rendered Loan Sanction & Application Form PDF generation.
 - **Background Schedulers**: `ScheduledExecutorService` / Spring Schedulers for Overdue Review and CoreDataPush daemons.
-- **Testing**: JUnit 5, Mockito, AssertJ (35 automated tests passed; live MySQL & PDF verification pending).
+- **Testing**: JUnit 5, Mockito, AssertJ (44 automated tests executed & passed; 0 failures, 0 errors; includes live MySQL integration tests & multi-table transaction rollback).
 
 ---
 
@@ -167,14 +167,14 @@ mvn test
 
 ### Automated Verification Status
 
-- **Automated Unit & Integration Tests**: **35 Passed, 0 Failed, 9 Skipped** across 11 test classes.
+- **Automated Unit & Integration Tests**: **44 Passed, 0 Failed, 0 Errors, 0 Skipped** across 11 test classes (`BUILD SUCCESS`).
   - Core Domain & Calculation Unit Tests (32 tests): **PASS**.
-  - Multi-Table Transaction Rollback (`TransactionRollbackTest`): **PASS**.
-  - Dedicated MySQL Integration Suite (`MySqlIntegrationTest` - 9 tests): **SKIPPED** (MySQL daemon offline on port 3306).
+  - Multi-Table Transaction Rollback (`TransactionRollbackTest` - 3 tests against real relational tables): **PASS**.
+  - Dedicated Live MySQL Integration Suite (`MySqlIntegrationTest` - 9 tests executed against live MySQL 8.x/26.x on port 3306): **PASS**.
+    - Covers Scenarios A–I: Schema verification, 7 tables & constraints, duplicate rejection, state machine enforcement, idempotency, and execution of all 6 required SQL reports.
 - **Subsequent Phase Verifications Pending**:
-  - **Live MySQL daemon start & execution** (Phase 3) – integration tests ready; pending active MySQL service on `localhost:3306`.
   - **PDF automated verification** (Phase 4) – pending automated byte/layout assertion test.
-  - **Persistence verification** (Phase 5) – pending application context restart verification.
+  - **Persistence verification across cold restart** (Phase 5) – pending application context restart verification.
 
 ### 31 Mandatory Test Scenarios Traceability
 

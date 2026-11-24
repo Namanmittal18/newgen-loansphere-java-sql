@@ -45,8 +45,24 @@ class CoreBankingSchedulerTest {
         historyDAO = mock(ApplicationHistoryDAO.class);
         utilityRunDAO = mock(UtilityRunDAO.class);
 
-        PlatformTransactionManager txManager = mock(PlatformTransactionManager.class);
-        when(txManager.getTransaction(any())).thenReturn(mock(TransactionStatus.class));
+        PlatformTransactionManager txManager = new org.springframework.transaction.support.AbstractPlatformTransactionManager() {
+            @Override
+            protected Object doGetTransaction() {
+                return new Object();
+            }
+
+            @Override
+            protected void doBegin(Object transaction, org.springframework.transaction.TransactionDefinition definition) {
+            }
+
+            @Override
+            protected void doCommit(org.springframework.transaction.support.DefaultTransactionStatus status) {
+            }
+
+            @Override
+            protected void doRollback(org.springframework.transaction.support.DefaultTransactionStatus status) {
+            }
+        };
 
         BusinessClock clock = new BusinessClock("2026-11-23");
 

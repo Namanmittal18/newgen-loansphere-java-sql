@@ -109,12 +109,12 @@ public class ReportDAOImpl implements ReportDAO {
 
         String dateExpr;
         if ("MONTHLY".equalsIgnoreCase(periodType)) {
-            dateExpr = "SUBSTRING(CAST(d.disbursed_at AS VARCHAR(25)), 1, 7)";
+            dateExpr = "DATE_FORMAT(d.disbursed_at, '%Y-%m')";
         } else if ("QUARTERLY".equalsIgnoreCase(periodType)) {
-            dateExpr = "CONCAT(SUBSTRING(CAST(d.disbursed_at AS VARCHAR(25)), 1, 4), '-Q', CAST((CAST(SUBSTRING(CAST(d.disbursed_at AS VARCHAR(25)), 6, 2) AS INT) - 1) / 3 + 1 AS VARCHAR(2)))";
+            dateExpr = "CONCAT(YEAR(d.disbursed_at), '-Q', QUARTER(d.disbursed_at))";
         } else {
             // DAILY default
-            dateExpr = "SUBSTRING(CAST(d.disbursed_at AS VARCHAR(25)), 1, 10)";
+            dateExpr = "DATE_FORMAT(d.disbursed_at, '%Y-%m-%d')";
         }
 
         String sql = "SELECT " + dateExpr + " AS period, la.branch_code, la.branch_name, " +
