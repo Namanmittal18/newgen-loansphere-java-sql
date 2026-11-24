@@ -13,6 +13,7 @@ public class StandaloneTestRunner {
         List<Class<?>> testClasses = List.of(
                 FinancialCalculationServiceTest.class,
                 CustomerValidatorTest.class,
+                CustomerServiceTest.class,
                 ProductValidatorTest.class,
                 WorkflowValidatorTest.class,
                 LoanApplicationServiceTest.class,
