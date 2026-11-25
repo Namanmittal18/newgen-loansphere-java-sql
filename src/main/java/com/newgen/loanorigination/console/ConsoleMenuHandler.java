@@ -31,6 +31,7 @@ public class ConsoleMenuHandler {
     private final OverdueReviewScheduler overdueReviewScheduler;
     private final CoreBankingScheduler coreBankingScheduler;
     private final BusinessClock businessClock;
+    private final PdfGenerationService pdfGenerationService;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -41,7 +42,8 @@ public class ConsoleMenuHandler {
                               ReportService reportService,
                               OverdueReviewScheduler overdueReviewScheduler,
                               CoreBankingScheduler coreBankingScheduler,
-                              BusinessClock businessClock) {
+                              BusinessClock businessClock,
+                              PdfGenerationService pdfGenerationService) {
         this.customerService = customerService;
         this.loanApplicationService = loanApplicationService;
         this.reviewerService = reviewerService;
@@ -50,6 +52,7 @@ public class ConsoleMenuHandler {
         this.overdueReviewScheduler = overdueReviewScheduler;
         this.coreBankingScheduler = coreBankingScheduler;
         this.businessClock = businessClock;
+        this.pdfGenerationService = pdfGenerationService;
     }
 
     public void startConsole(Scanner scanner) {
@@ -349,6 +352,18 @@ public class ConsoleMenuHandler {
                 System.out.println("\n[✓] Application rejected by credit authority.");
             } else {
                 System.out.println("\n[i] Application is already approved and ready for simulated disbursement!");
+                System.out.print("\nDo you want to export official Loan Application Form PDF? (Y/N): ");
+                if ("Y".equalsIgnoreCase(scanner.nextLine().trim())) {
+                    try {
+                        LoanApplication app = loanApplicationService.getApplicationById(appId);
+                        byte[] pdfBytes = pdfGenerationService.generateApplicationFormPdf(app, app.getCustomer());
+                        String filename = "ApplicationForm_" + app.getApplicationNumber() + ".pdf";
+                        java.nio.file.Files.write(java.nio.file.Path.of(filename), pdfBytes);
+                        System.out.println("[✓] PDF Application Form exported successfully to: " + filename);
+                    } catch (Exception ex) {
+                        System.out.println("[X] Failed to export PDF: " + ex.getMessage());
+                    }
+                }
             }
         } catch (Exception e) {
             System.out.println("\n[X] Error: " + e.getMessage());

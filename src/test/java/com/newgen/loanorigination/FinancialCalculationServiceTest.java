@@ -93,4 +93,16 @@ class FinancialCalculationServiceTest {
         BigDecimal emi = financialService.calculateEmi(principal, annualRate, tenureMonths);
         assertEquals(new BigDecimal("10000.00"), emi);
     }
+
+    @Test
+    @DisplayName("Regression Test: Currency formatting across boundary values (500, 5000, 50000, 500000)")
+    void testCurrencyFormattingIndianNumbering() {
+        assertEquals("₹500.00", com.newgen.loanorigination.utility.CurrencyFormatter.formatInr(new BigDecimal("500.00")));
+        assertEquals("₹5,000.00", com.newgen.loanorigination.utility.CurrencyFormatter.formatInr(new BigDecimal("5000.00")),
+                "Must format as ₹5,000.00 and never ₹5,00,0.00");
+        assertEquals("5,000.00", com.newgen.loanorigination.utility.CurrencyFormatter.formatIndianNumberOnly(new BigDecimal("5000.00")));
+        assertEquals("₹50,000.00", com.newgen.loanorigination.utility.CurrencyFormatter.formatInr(new BigDecimal("50000.00")));
+        assertEquals("₹5,00,000.00", com.newgen.loanorigination.utility.CurrencyFormatter.formatInr(new BigDecimal("500000.00")));
+        assertEquals("₹50,00,000.00", com.newgen.loanorigination.utility.CurrencyFormatter.formatInr(new BigDecimal("5000000.00")));
+    }
 }

@@ -81,10 +81,15 @@ Access the dashboard in your web browser:
    - **REJECT**: Mandatory rejection reason required; transitions to terminal `REJECTED`.
 
 #### Step 5: Credit Approval & PDF Application Form Generation
-1. Navigate to **Credit Approval** (`/credit`).
-2. View approved applications.
-3. Click **Download Application Form PDF** to download the official OpenPDF sanction document.
-4. Click **Disburse** to move to simulated disbursement.
+1. Navigate to **Credit Approval** (`/credit`) in the Web UI, or select Option `6. Credit Approval (Sanctions & Verification)` in the interactive Console.
+2. View approved applications pending sanction.
+3. **Web Download**: Click **Download Application Form PDF** (or the red PDF icon) on any application in the table or view page to trigger `GET /credit/{id}/pdf`. The browser downloads an official vector-rendered OpenPDF document named `ApplicationForm_{appNo}.pdf`.
+4. **Console Export**: In Console Menu Option 6, after viewing or reviewing an application, answer `Y` to the prompt:
+   ```text
+   Do you want to export official Loan Application Form PDF? (Y/N): Y
+   [✓] PDF Application Form exported successfully to: ApplicationForm_APP-202611-1.pdf
+   ```
+5. Click **Disburse** (or proceed in Console Option 7) to move to simulated disbursement.
 
 #### Step 6: Simulated Loan Disbursement
 1. Navigate to **Disbursement** (`/disbursement`).
@@ -140,3 +145,46 @@ export DB_PASSWORD="your_password"
 mvn test -Dtest=MySqlIntegrationTest
 ```
 *Note: When MySQL is offline, live MySQL tests are safely skipped via JUnit 5 dynamic assumptions without blocking unit test builds.*
+
+---
+
+### 4. Loan Application Form PDF Specification & Verification
+
+#### 4.1 Document Content Layout
+The generated PDF strictly conforms to standard enterprise banking sanction letters:
+- **Header**: Application Title & Institutional Sub-banner.
+- **Section 1: Application Summary**: Application Number, Current Workflow Status, Product Type (`PERSONAL` / `EDUCATION`), Branch Code & Name, Submission Date, Approval Date.
+- **Section 2: Applicant Information**: Customer Full Name, Customer Unique Code, Date of Birth & Completed Age in Years (e.g. `15-Jun-1995 (Age: 31 years)`), 10-digit Mobile Number, KYC Type & Reference, KYC Verification Status, Multi-line Residential Address (auto-wrapped without clipping).
+- **Section 3: Financial Terms & Affordability**: Requested Loan Amount (Formatted in Indian comma format `INR ##,##,###.##`), Sanctioned Loan Amount, Tenure in Months, Annual Interest Rate (`% p.a.`), Monthly Net Income, Existing Obligations, Calculated Equated Monthly Installment (EMI), FOIR Percentage with benchmark comparison (`FOIR% (Limit: 50.00%)`).
+- **Section 4: Reviewer Approval & Sanctions**: Reviewing Officer Code, Sanction Remarks or Underwriting Reason.
+- **Signatures Block**: Pre-aligned signature areas for Applicant and Sanction Authority.
+
+#### 4.2 Automated Testing
+Run the dedicated automated PDF test suite:
+```bash
+mvn test -Dtest=ApplicationFormPdfTest
+```
+This executes 8 end-to-end programmatic verification tests using OpenPDF `PdfReader` and `PdfTextExtractor`, inspecting PDF headers (`%PDF-1.5`), byte structure, data non-truncation, multi-status rendering, null safety, temp disk writes, and REST endpoints.
+
+---
+
+### 5. Cold Restart Database Persistence Verification
+
+#### 5.1 Verification Principle
+LoanSphere is designed for multi-tier enterprise persistence. All state transitions, customer registrations, sanction records, disbursement ledgers, core banking payloads, and audit trails persist permanently across:
+1. Application server termination / context unloads.
+2. MySQL daemon cold restarts (`brew services stop mysql` followed by `brew services start mysql`).
+3. Connection pool teardowns and reconnections.
+
+#### 5.2 Automated Persistence Test Execution
+Run the automated cold restart persistence suite:
+```bash
+mvn test -Dtest=ColdRestartPersistenceTest
+```
+This test suite:
+- Bootstraps Application Context A against live MySQL `newgen_loan_origination`.
+- Executes the full lifecycle: Customer registration $\to$ Application submission $\to$ Underwriting approval $\to$ Disbursement ledger insertion $\to$ CoreDataPush integration $\to$ `EXIT` terminal state.
+- Completely tears down Context A and all connection pool handles.
+- Re-initializes Application Context B from scratch.
+- Verifies that all 7 tables maintain 100% data fidelity, primary/foreign key integrity, and timestamps.
+- Verifies that scheduler executions on restarted applications remain strictly idempotent with zero duplicate entries.

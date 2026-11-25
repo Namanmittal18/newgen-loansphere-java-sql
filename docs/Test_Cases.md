@@ -37,22 +37,34 @@
 | **28** | Failed core banking push – remains retryable | `CoreBankingSchedulerTest` | DB failure during sync | Application remains `DISBURSED`, retryable | Match | **PASS** |
 | **29** | Repeated core banking push – no duplicates | `CoreBankingSchedulerTest` | Already pushed record claimed | Unique key prevents insert; marked EXIT | Match | **PASS** |
 | **30** | Successful core banking push – EXIT | `CoreBankingSchedulerTest` | Disbursed loan processed | Record in `NG_CORE_BANKING`, status = EXIT | Match | **PASS** |
-| **31** | Restart application – records persist | Integration Verification | Restart context & query database | All applications, customers, ledgers persist | Pending Phase 5 verification | **PENDING** |
+| **31** | Restart application – records persist | `ColdRestartPersistenceTest` | Restart context & physical MySQL daemon | All applications, customers, ledgers persist across cold restart | Match | **PASS** |
 
 ---
 
-### Verification Execution Status (Phase 3 Live MySQL Integration Suite Passed)
-- **Automated Tests Executed**: **44 Passed, 0 Failed, 0 Errors, 0 Skipped** across 11 test suites (`BUILD SUCCESS`).
-- **Unit & Transaction Tests Active**:
-  - Scenario 11 (Duplicate Mobile Registration): Verified via `CustomerServiceTest` (**PASS**).
-  - Scenario 24 (Multi-Table Transaction Rollback): Verified via `TransactionRollbackTest` against real database tables (**PASS**).
-  - Background Utilities & Push: Verified via `OverdueReviewSchedulerTest` & `CoreBankingSchedulerTest` (**PASS**).
-- **Dedicated MySQL Integration Suite**:
-  - Implemented in [src/test/java/com/newgen/loanorigination/MySqlIntegrationTest.java](file:///Users/namanmittal/Desktop/Java%20Project/src/test/java/com/newgen/loanorigination/MySqlIntegrationTest.java) covering Scenarios A–I and all 6 SQL reports.
-  - Live execution status: **100% PASS** (connected to MySQL 26.10.0 on `localhost:3306`, verified all 7 tables, constraints, transaction integrity, and all 6 analytical SQL reports).
-- **Remaining Pending Scenarios**:
-  - Phase 4: Application Form PDF Automated Byte Verification.
-  - Phase 5: Complete Database Records Persistence across Restart (Scenario 31).
+### Verification Execution Status (All 31 Scenarios & Phase 5 Cold Restart Passed)
+- **Automated Tests Executed**: **55 Passed, 0 Failed, 0 Errors, 0 Skipped** across 13 test suites (`BUILD SUCCESS`).
+- **Master Test Coverage Summary**:
+  - **All 31 Mandatory Evaluation Scenarios**: **100% PASS**.
+  - **Dedicated Live MySQL Integration Suite** (`MySqlIntegrationTest`): 9 tests covering Scenarios A–I and all 6 analytical SQL reports (**PASS**).
+  - **Multi-Table Transaction Rollback Suite** (`TransactionRollbackTest`): 3 tests verifying atomic rollback across database tables (**PASS**).
+  - **Application Form PDF Verification Suite** (`ApplicationFormPdfTest`): 8 tests verifying OpenPDF layout, fields, and endpoints (**PASS**).
+  - **Cold Restart Database Persistence Suite** (`ColdRestartPersistenceTest`): 2 tests verifying full lifecycle persistence across independent connection pools, scheduler idempotency, and physical MySQL service cold restart (**PASS**).
+  - **Financial Calculation & Currency Suite** (`FinancialCalculationServiceTest`): 5 tests including Indian currency formatting regression (**PASS**).
+
+---
+
+### PDF Document Automated Test Scenarios Matrix
+
+| Scenario ID | Test Method | Objective & Inputs | Assertions & Extracted Fields Verified | Status |
+|---|---|---|---|:---:|
+| **PDF-01** | `testValidPersonalLoanPdfContent` | Personal loan (`APP-2026-00101`), ₹2.5L, 36 mos, 12%, FOIR 22.17%, status `CREDIT_APPROVAL` | `%PDF-` header, App No, Status, Branch, Dates, Customer Name, DOB & Age, Mobile, KYC, Address, Currency formatting (INR), EMI, FOIR, Sanction Signatures | **PASS** |
+| **PDF-02** | `testValidEducationLoanPdfContent` | Education loan (`APP-2026-00202`), ₹8L, 60 mos, 9.5%, FOIR 31.53%, status `DISBURSED` | `EDUCATION` product tag, ₹8L amount, 60 months tenure, 9.50% p.a. rate, `DISBURSED` state, calculated EMI INR 16,801.32 | **PASS** |
+| **PDF-03** | `testLongCustomerNameAndAddress` | Long customer name (63 chars) & lengthy address (160+ chars) | Auto-wrapping in `PdfPCell`, no clipping/truncation, valid page count ($\ge 1$), complete text extracted | **PASS** |
+| **PDF-04** | `testDifferentApplicationStatuses` | `DRAFT`, `UNDER_REVIEW`, `REJECTED`, `EXIT` | Sanctioned amount "N/A (Pending Sanction)" for unapproved loans; Rejection reason displayed in sanction remarks for `REJECTED` | **PASS** |
+| **PDF-05** | `testNonexistentApplicationId` | Invalid App ID (`999999L`) requested via `/credit/{id}/pdf` | Handled via `ApplicationNotFoundException`; 404 response | **PASS** |
+| **PDF-06** | `testIncompleteAndNullDataGracefulHandling` | Null `LoanApplication`, null customer, missing dates | Null application throws `IllegalArgumentException`; null customer defaults gracefully to `"N/A"` placeholders without NPE | **PASS** |
+| **PDF-07** | `testPhysicalFileWriteAndReadability` | Write PDF bytes to `@TempDir` file on physical disk | File exists, size > 1 KB, re-opened and parsed by `PdfReader`, valid PDF version (1.4/1.5) | **PASS** |
+| **PDF-08** | `testCreditApprovalControllerDownloadEndpoint` | HTTP GET `/credit/{id}/pdf` | HTTP 200 OK, `Content-Type: application/pdf`, `Content-Disposition: attachment; filename="ApplicationForm_APP-...pdf"`, valid PDF body bytes | **PASS** |
 
 ---
 

@@ -21,7 +21,7 @@ $$\text{Customer Registration} \longrightarrow \text{Loan Application} \longrigh
 - **Financial Calculation Engine**: Pure `BigDecimal` arithmetic with `RoundingMode.HALF_UP` and Indian currency formatting (`₹##,##,###.##`).
 - **Document Generation**: OpenPDF for vector-rendered Loan Sanction & Application Form PDF generation.
 - **Background Schedulers**: `ScheduledExecutorService` / Spring Schedulers for Overdue Review and CoreDataPush daemons.
-- **Testing**: JUnit 5, Mockito, AssertJ (44 automated tests executed & passed; 0 failures, 0 errors; includes live MySQL integration tests & multi-table transaction rollback).
+- **Testing**: JUnit 5, Mockito, AssertJ (55 automated tests executed & passed; 0 failures, 0 errors, 0 skipped; includes live MySQL integration tests, multi-table transaction rollback, automated OpenPDF application form verification, and database cold restart persistence).
 
 ---
 
@@ -167,14 +167,16 @@ mvn test
 
 ### Automated Verification Status
 
-- **Automated Unit & Integration Tests**: **44 Passed, 0 Failed, 0 Errors, 0 Skipped** across 11 test classes (`BUILD SUCCESS`).
-  - Core Domain & Calculation Unit Tests (32 tests): **PASS**.
+- **Automated Unit & Integration Tests**: **55 Passed, 0 Failed, 0 Errors, 0 Skipped** across 13 test classes (`BUILD SUCCESS`).
+  - Core Domain & Calculation Unit Tests (33 tests): **PASS** (includes CurrencyFormatter Indian numbering regression test).
   - Multi-Table Transaction Rollback (`TransactionRollbackTest` - 3 tests against real relational tables): **PASS**.
   - Dedicated Live MySQL Integration Suite (`MySqlIntegrationTest` - 9 tests executed against live MySQL 8.x/26.x on port 3306): **PASS**.
     - Covers Scenarios A–I: Schema verification, 7 tables & constraints, duplicate rejection, state machine enforcement, idempotency, and execution of all 6 required SQL reports.
-- **Subsequent Phase Verifications Pending**:
-  - **PDF automated verification** (Phase 4) – pending automated byte/layout assertion test.
-  - **Persistence verification across cold restart** (Phase 5) – pending application context restart verification.
+  - End-to-End Application Form PDF Verification Suite (`ApplicationFormPdfTest` - 8 tests): **PASS**.
+    - Programmatic byte-level `%PDF-` signature check, OpenPDF `PdfReader` & `PdfTextExtractor` inspection across Personal/Education products, long customer details, multi-status layouts, graceful null safety, disk writes, and REST download endpoint.
+  - Cold Restart Persistence Suite (`ColdRestartPersistenceTest` - 2 tests): **PASS**.
+    - Programmatic verification of lifecycle progression (`DRAFT` $\to$ `UNDER_REVIEW` $\to$ `CREDIT_APPROVAL` $\to$ `DISBURSED` $\to$ `EXIT`), multi-table relationship persistence across completely independent connection pools, and scheduler re-run idempotency.
+    - Verified against real physical MySQL cold restart (`brew services stop mysql` $\to$ cold shutdown $\to$ `brew services start mysql` $\to$ cold restart $\to$ data intact).
 
 ### 31 Mandatory Test Scenarios Traceability
 
@@ -208,7 +210,7 @@ mvn test
 - [x] **28.** Failed core banking push – remains retryable in DISBURSED – `CoreBankingSchedulerTest` (**PASS**)
 - [x] **29.** Repeated core banking push – no duplicate rows in NG_CORE_BANKING – `CoreBankingSchedulerTest` (**PASS**)
 - [x] **30.** Successful core banking push – transitions to EXIT – `CoreBankingSchedulerTest` (**PASS**)
-- [ ] **31.** Application restart – records persist in database (*Phase 5 persistence verification pending*)
+- [x] **31.** Application restart – records persist in database – `ColdRestartPersistenceTest` (**PASS**)
 
 ---
 
